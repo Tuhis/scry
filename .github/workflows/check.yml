@@ -1,13 +1,44 @@
+# The gate, run by CI exactly as developers and agents run it locally.
+#
+# RUNNER POOL. `runs-on` reads the RUNNER_LABEL repository variable, set to
+# `ioio-k8s-scry`: the self-hosted ARC scale set defined in the ioio gitops repo
+# at clusters/baremetal/actions-runners/scry.yaml. Same pattern as gawk's ci.yml.
+#
+# Unset, it falls back to `ubuntu-latest`. That is the rollback path with no
+# commit: delete the variable and CI is back on hosted runners. It also means
+# an unset variable moves CI to hosted runners silently, so the job prints what
+# it resolved.
+#
+# What the job needs from the runner: python3, git and a Docker daemon that can
+# bind-mount the checkout (./dev builds tools/docker/Dockerfile and runs the
+# checks inside it). The self-hosted pool provides that through its dind
+# sidecar, which mounts the same _work volume at the same path.
 name: check
+
 on:
   push:
+    branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+# A superseded PR run is cancelled; pushes to main each get their own group.
+concurrency:
+  group: check-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    # The work is about a minute plus the toolchain image build; a wedged step
+    # must not hold a runner.
+    timeout-minutes: 20
     steps:
+      - name: Report runner pool
+        run: |
+          echo "Runner label: ${{ vars.RUNNER_LABEL || 'ubuntu-latest (RUNNER_LABEL unset)' }}" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@v4
-      # Builds the pinned toolchain image (tools/docker/Dockerfile) and runs the same
-      # gate developers and agents run locally. --ci verifies formatting instead of applying it.
+      # Builds the pinned toolchain image and runs the gate. --ci verifies
+      # formatting instead of applying it.
       - run: ./dev check --ci
