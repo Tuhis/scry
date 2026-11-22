@@ -13,7 +13,7 @@ describe("test harness", function()
 	it("fails loudly on real API that has no stub", function()
 		local wow = Wow.new():login()
 		assert.has_error(function()
-			return wow.env.GetMoney
+			return wow.env.GetZoneText
 		end)
 		assert.has_error(function()
 			return wow.env.C_Timer.NewTicker

@@ -57,7 +57,107 @@ local function default_state()
 			race = { name = "Human", token = "Human", id = 1 },
 			faction = "Alliance",
 			level = 80,
+			sex = 1, -- Enum.UnitSex
+			xp = 1500,
+			xpMax = 20000,
+			restedXp = 300, -- override with false for "not rested" (GetXPExhaustion returns nil)
+			zone = 1453, -- uiMapID
+			bindLocation = "Stormwind City",
+			guild = false, -- or { name, rankName, rankIndex }
+			hardcore = false,
+			experiencePreset = 1, -- Enum.ForeverExperiencePreset
 		},
+		money = 1234567, -- copper
+		items = { -- item database: sellPrice in copper; cached = false until requested
+			[6948] = { name = "Hearthstone", sellPrice = 0 },
+			[2589] = { name = "Linen Cloth", sellPrice = 13 },
+			[2318] = { name = "Light Leather", sellPrice = 15 },
+		},
+		bags = { -- by Enum.BagIndex: size, slots[slot] = { id, count }
+			[0] = {
+				size = 16,
+				slots = {
+					[1] = { id = 6948, count = 1 },
+					[2] = { id = 2589, count = 20 },
+					[5] = { id = 2589, count = 4 },
+				},
+			},
+			[1] = { size = 6, slots = { [1] = { id = 2318, count = 10 } } },
+			[6] = { size = 98, slots = { [3] = { id = 2589, count = 40 } } }, -- first bank tab
+		},
+		bank = { tabs = { 6 } }, -- purchased character bank tab IDs
+		pvp = { honorableKills = 12, highestRank = 0 },
+		equipment = { -- by inventory slot
+			[1] = { id = 10504, link = "|cff0070dd|Hitem:10504::::::::80:::::|h[Green Lens]|h|r" },
+			[16] = { id = 2092, link = "|cffffffff|Hitem:2092:7:::::::80:::::|h[Worn Dagger]|h|r" },
+		},
+		skills = { -- in list order, headers included
+			{ skillID = 11, name = "Professions", isHeader = true },
+			{ skillID = 171, name = "Alchemy", rank = 150, maxRank = 225 },
+			{ skillID = 43, name = "Swords", rank = 300, maxRank = 400 },
+		},
+		tradeskill = { -- the profession window; see C_TradeSkillUI stubs
+			ready = false,
+			linked = false,
+			guild = false,
+			npc = false,
+			professionID = 171,
+			recipes = { [2330] = true, [2332] = false, [2329] = true },
+			recipeProfession = { [2330] = 171, [2332] = 171, [2329] = 171 },
+		},
+		spellbook = {
+			lines = {
+				{ name = "General", items = { { spellID = 6603, name = "Auto Attack" } } },
+				{
+					name = "Fire",
+					items = {
+						{ spellID = 133, name = "Fireball", subName = "Rank 1" },
+						{ spellID = 143, name = "Fireball", subName = "Rank 2" },
+						{ spellID = 11366, name = "Pyroblast", itemType = 2 }, -- not learned yet
+						{ spellID = 11103, name = "Impact", isPassive = true },
+					},
+				},
+			},
+			pet = false, -- or a list of items
+		},
+		spellSubtext = {}, -- C_Spell.GetSpellSubtext by spell ID
+		traits = {
+			treeConfigs = { [1187] = 101, [1188] = 102, [1189] = 103 },
+			configs = { [200] = { ID = 200, type = 1, name = "Fire", treeIDs = { 900 }, usesSharedActionBars = false } },
+			trees = {
+				[1187] = { [5001] = 1, [5002] = 0 },
+				[1188] = { [5101] = 3 },
+				[1189] = {},
+				[900] = { [7001] = 5, [7002] = 0, [7003] = 2 },
+			},
+			currency = { traitCurrencyID = 4225, quantity = 3, spent = 4 },
+			maxAvailable = 50,
+			activeClassConfig = 200,
+			importString = "CAEAAAAAAAAAAAAAAAAAAAAAAA",
+		},
+		spec = { index = 2, id = 63, name = "Fire" },
+		renown = { [2802] = 7 },
+		achievements = { -- categories with their achievements
+			{
+				id = 15579,
+				list = {
+					{ id = 9001, completed = true, month = 11, day = 22, year = 26, earnedByMe = true },
+					{ id = 9002, completed = false },
+					{ id = 9003, completed = true, month = 1, day = 5, year = 26, earnedByMe = false },
+				},
+			},
+		},
+		achievementPoints = { [9001] = 10 }, -- Legacy Points per achievement
+		reputations = { -- in list order, headers included
+			{ factionID = 469, name = "Alliance", isHeader = true },
+			{ factionID = 72, name = "Stormwind", reaction = 5, currentStanding = 4200 },
+			{ factionID = 47, name = "Ironforge", reaction = 4, currentStanding = 900 },
+		},
+		currencies = { -- in list order, headers included
+			{ name = "Miscellaneous", isHeader = true },
+			{ currencyID = 3485, name = "Renown", quantity = 12 },
+		},
+		quests = { 783, 7, 54 }, -- completed quest IDs
 	}
 end
 
@@ -85,6 +185,7 @@ function Wow.new(opts)
 	self.printed = {}
 	self.reloadRequested = false
 	self.screenshots = 0
+	self.itemRequests = {} -- item IDs passed to C_Item.RequestLoadItemDataByID
 	self:_reset()
 	return self
 end

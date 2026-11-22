@@ -13,9 +13,20 @@ local util = require("tests.util")
 local GOLDEN = "tests/golden/Scry.lua"
 
 local function scenario()
-	local wow = Wow.new():login()
+	-- First character: everything the addon can record, including the data that
+	-- needs a window (bank, profession) or a player action (/played).
+	local wow = Wow.new({
+		player = { guild = { name = "Scryers", rankName = "Officer", rankIndex = 1 } },
+		spellbook = { pet = { { spellID = 17253, name = "Bite", subName = "Rank 3" } } },
+	}):login()
 	wow:advance(120)
 	wow:fire("PLAYER_LEVEL_UP", 81)
+	wow:fire("BANKFRAME_OPENED")
+	wow:fire("BANKFRAME_CLOSED")
+	wow.state.tradeskill.ready = true
+	wow:fire("TRADE_SKILL_LIST_UPDATE")
+	wow:fire("TIME_PLAYED_MSG", 360000, 1200)
+	wow:advance(10)
 	local saved = wow:logout()
 
 	local alt = Wow.new({
@@ -29,6 +40,11 @@ local function scenario()
 			class = { name = "Shaman", token = "SHAMAN", id = 7 },
 			race = { name = "Orc", token = "Orc", id = 2 },
 		},
+		-- Second character: one without talents, gear or bags beyond the backpack.
+		bags = { [0] = { slots = { [2] = false, [5] = false } }, [1] = { size = 0, slots = { [1] = false } } },
+		traits = { activeClassConfig = false, trees = { [1187] = { [5001] = 0 }, [1188] = { [5101] = 0 } } },
+		spec = { index = 0 },
+		equipment = { [1] = false, [16] = false },
 	}):login()
 	alt:logout()
 	-- Only ScryDB is the contract; ScryDevDB is a debugging aid.

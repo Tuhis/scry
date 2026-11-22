@@ -25,6 +25,8 @@
       "type": "integer",
       "minimum": 0
     },
+    "count": { "type": "integer", "minimum": 0 },
+    "idKeys": { "description": "Keys are numeric game IDs.", "pattern": "^[0-9]+$" },
     "meta": {
       "type": "object",
       "additionalProperties": false,
@@ -37,11 +39,25 @@
       }
     },
     "characterEntry": {
-      "description": "Per-character data: one section per addon module, each with its own updatedAt.",
+      "description": "Per-character data: one section per addon module, each with its own updatedAt. Every section is optional.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "character": { "$ref": "#/$defs/character" }
+        "character": { "$ref": "#/$defs/character" },
+        "money": { "$ref": "#/$defs/money" },
+        "bags": { "description": "Items carried: backpack, bags and reagent bag.", "$ref": "#/$defs/itemContainer" },
+        "bank": { "description": "Items in the character's bank tabs. Snapshot of the last bank visit.", "$ref": "#/$defs/itemContainer" },
+        "skills": { "$ref": "#/$defs/skills" },
+        "professions": { "$ref": "#/$defs/professions" },
+        "spells": { "$ref": "#/$defs/spells" },
+        "legacy": { "$ref": "#/$defs/legacy" },
+        "equipment": { "$ref": "#/$defs/equipment" },
+        "talents": { "$ref": "#/$defs/talents" },
+        "reputations": { "$ref": "#/$defs/reputations" },
+        "currencies": { "$ref": "#/$defs/currencies" },
+        "quests": { "$ref": "#/$defs/quests" },
+        "pvp": { "$ref": "#/$defs/pvp" },
+        "played": { "$ref": "#/$defs/played" }
       }
     },
     "character": {
@@ -55,6 +71,273 @@
         "faction": { "enum": ["Alliance", "Horde", "Neutral"] },
         "level": { "type": "integer", "minimum": 1 },
         "guid": { "description": "Same as the character's key.", "type": "string", "pattern": "^Player-[0-9]+-[0-9A-F]+$" },
+        "sex": { "enum": ["male", "female", "other"] },
+        "xp": { "description": "Experience into the current level.", "$ref": "#/$defs/count" },
+        "xpMax": { "description": "Experience needed for the next level.", "$ref": "#/$defs/count" },
+        "restedXp": { "description": "Rested experience left, 0 when not rested.", "$ref": "#/$defs/count" },
+        "zone": { "description": "UI map ID of the zone the character was last seen in.", "type": "integer" },
+        "bindLocation": { "description": "Hearthstone location, localized name.", "type": "string" },
+        "guild": {
+          "description": "Absent when not in a guild.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string" },
+            "rank": { "description": "Rank name as set by the guild.", "type": "string" },
+            "rankIndex": { "description": "0 = guild master.", "type": "integer", "minimum": 0 }
+          }
+        },
+        "hardcore": { "type": "boolean" },
+        "experiencePreset": { "description": "WoW: Forever experience preset.", "enum": ["classic", "enhanced"] },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["copper", "updatedAt"],
+      "properties": {
+        "copper": { "description": "Money carried, in copper (1 gold = 10000).", "$ref": "#/$defs/count" },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "itemContainer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "slots", "vendorValue", "updatedAt"],
+      "properties": {
+        "items": {
+          "description": "Item ID -> total count across all slots.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
+        "slots": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["total", "free"],
+          "properties": {
+            "total": { "$ref": "#/$defs/count" },
+            "free": { "$ref": "#/$defs/count" }
+          }
+        },
+        "vendorValue": { "description": "What a vendor would pay for all items, in copper. Items whose price the client had not loaded yet count as 0.", "$ref": "#/$defs/count" },
+        "updatedAt": { "description": "When the containers were last scanned.", "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lines", "updatedAt"],
+      "properties": {
+        "lines": {
+          "description": "Skill line ID -> rank. Professions, weapon skills, languages, ...",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rank", "maxRank"],
+            "properties": {
+              "rank": { "$ref": "#/$defs/count" },
+              "maxRank": { "$ref": "#/$defs/count" }
+            }
+          }
+        },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "professions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["known", "updatedAt"],
+      "properties": {
+        "known": {
+          "description": "Profession (skill line) ID -> known recipes. A profession appears once its window was opened with the addon enabled.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["recipes", "scannedAt"],
+            "properties": {
+              "recipes": { "description": "Recipe spell IDs the character knows, ascending.", "type": "array", "items": { "type": "integer" } },
+              "scannedAt": { "description": "When this profession's window was last read.", "$ref": "#/$defs/timestamp" }
+            }
+          }
+        },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "spellMap": {
+      "description": "Spell ID -> details.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/idKeys" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["passive"],
+        "properties": {
+          "passive": { "type": "boolean" },
+          "rank": { "description": "Spell rank, absent for spells without one.", "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "spells": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["player", "updatedAt"],
+      "properties": {
+        "player": { "$ref": "#/$defs/spellMap" },
+        "pet": { "description": "Spells of the pet that was last out. Absent if no pet was seen.", "$ref": "#/$defs/spellMap" },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "nodeRanks": {
+      "description": "Trait node ID -> active rank. Only nodes with at least one rank.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/idKeys" },
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    },
+    "legacy": {
+      "description": "WoW: Forever Legacy system.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["points", "trees", "updatedAt"],
+      "properties": {
+        "points": {
+          "description": "Legacy Points.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["earned", "max"],
+          "properties": {
+            "earned": { "description": "Points earned so far (level on the Legacy reward track).", "$ref": "#/$defs/count" },
+            "max": { "description": "Points that can be earned in the game right now.", "$ref": "#/$defs/count" },
+            "unspent": { "$ref": "#/$defs/count" },
+            "spent": { "description": "Points spent in the Legacy trees.", "$ref": "#/$defs/count" }
+          }
+        },
+        "trees": {
+          "description": "Legacy tree ID (1187 Professions, 1188 Adventure, 1189 Progression) -> purchased nodes.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": { "$ref": "#/$defs/nodeRanks" }
+        },
+        "challenges": {
+          "description": "Completed Legacy Challenges by achievement ID. Absent until first scanned (a few seconds after login).",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["earnedByMe", "points"],
+            "properties": {
+              "earnedByMe": { "description": "false: completed by another character of the account.", "type": "boolean" },
+              "points": { "description": "Legacy Points the challenge awards.", "$ref": "#/$defs/count" },
+              "date": { "description": "Completion date, YYYY-MM-DD.", "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+            }
+          }
+        },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "equipment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slots", "updatedAt"],
+      "properties": {
+        "slots": {
+          "description": "Inventory slot ID (1 head ... 19 tabard) -> equipped item. Empty slots are absent.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["itemID"],
+            "properties": {
+              "itemID": { "type": "integer" },
+              "link": { "description": "Full item link; carries enchant and random suffix.", "type": "string" }
+            }
+          }
+        },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "talents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "updatedAt"],
+      "properties": {
+        "specID": { "description": "Active specialization ID. Absent when none is chosen.", "type": "integer" },
+        "nodes": { "$ref": "#/$defs/nodeRanks" },
+        "loadout": { "description": "Talent loadout string, importable in the game's talent window.", "type": "string" },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "reputations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factions", "updatedAt"],
+      "properties": {
+        "factions": {
+          "description": "Faction ID -> standing.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["standing", "value"],
+            "properties": {
+              "standing": { "description": "1 Hated ... 4 Neutral ... 8 Exalted.", "type": "integer" },
+              "value": { "description": "Total reputation earned with the faction.", "type": "integer" }
+            }
+          }
+        },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "currencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amounts", "updatedAt"],
+      "properties": {
+        "amounts": {
+          "description": "Currency ID -> amount held.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": { "type": "integer" }
+        },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "quests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completed", "updatedAt"],
+      "properties": {
+        "completed": { "description": "IDs of completed quests, ascending.", "type": "array", "items": { "type": "integer" } },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "pvp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["honorableKills", "highestRank", "updatedAt"],
+      "properties": {
+        "honorableKills": { "description": "Lifetime honorable kills.", "$ref": "#/$defs/count" },
+        "highestRank": { "description": "Highest PvP rank reached (game enum PvPRanks, 0 = none).", "$ref": "#/$defs/count" },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "played": {
+      "description": "Time played. Only updated when the player types /played.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "thisLevel", "updatedAt"],
+      "properties": {
+        "total": { "description": "Seconds played in total.", "$ref": "#/$defs/count" },
+        "thisLevel": { "description": "Seconds played at the current level.", "$ref": "#/$defs/count" },
         "updatedAt": { "$ref": "#/$defs/timestamp" }
       }
     }

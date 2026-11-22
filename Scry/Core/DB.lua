@@ -79,6 +79,12 @@ function DB:Section(moduleName)
 	return section
 end
 
+--- The current character's section for a module, or nil when nothing was recorded yet.
+function DB:Peek(moduleName)
+	local char = self.db.characters[self:CharKey()]
+	return char and char[moduleName]
+end
+
 --- Stamp a section (and the database) as modified now. Call after every write.
 function DB:Touch(section)
 	local now = GetServerTime()

@@ -20,8 +20,43 @@ describe("module: character", function()
 			faction = "Horde",
 			level = 70,
 			guid = "Player-1234-0ABCDEF0",
+			sex = "female",
+			xp = 1500,
+			xpMax = 20000,
+			restedXp = 300,
+			zone = 1453,
+			bindLocation = "Stormwind City",
+			hardcore = false,
+			experiencePreset = "enhanced",
 			updatedAt = 1700000000,
 		}, c)
+	end)
+
+	it("records guild membership and copes with missing optional data", function()
+		local wow = Wow.new({
+			player = {
+				guild = { name = "Scryers", rankName = "Officer", rankIndex = 1 },
+				restedXp = false,
+				zone = false,
+				experiencePreset = false,
+				hardcore = true,
+				sex = 0,
+			},
+		}):login()
+		wow:assertNoErrors()
+		local c = wow.env.ScryDB.characters["Player-1234-0ABCDEF0"].character
+		assert.same({ name = "Scryers", rank = "Officer", rankIndex = 1 }, c.guild)
+		assert.equals(0, c.restedXp)
+		assert.is_nil(c.zone)
+		assert.is_nil(c.experiencePreset)
+		assert.is_true(c.hardcore)
+		assert.equals("male", c.sex)
+
+		wow.state.player.guild = false
+		wow.state.player.xp = 1600
+		wow:fire("PLAYER_GUILD_UPDATE", "player")
+		assert.is_nil(c.guild)
+		assert.equals(1600, c.xp)
 	end)
 
 	it("updates the level from the PLAYER_LEVEL_UP payload", function()

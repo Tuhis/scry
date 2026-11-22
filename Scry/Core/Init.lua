@@ -52,6 +52,21 @@ function ns:After(seconds, fn)
 	end)
 end
 
+local pending = {}
+
+--- Run `fn` once, `seconds` from now, no matter how often this is called with the
+--- same `key` in the meantime. For events that fire in bursts.
+function ns:Debounce(key, seconds, fn)
+	if pending[key] then
+		return
+	end
+	pending[key] = true
+	ns:After(seconds, function()
+		pending[key] = nil
+		fn()
+	end)
+end
+
 -- Modules --------------------------------------------------------------------
 --- Register a data module. `name` is also the key of the module's section in ScryDB.
 --- Optional callbacks: module:OnLogin() - player data is available, DB is ready.

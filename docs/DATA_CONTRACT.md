@@ -58,12 +58,91 @@ Schema describes that JSON form.
         "faction": "Horde",    // Alliance | Horde | Neutral
         "level": 70,
         "guid": "Player-1234-0ABCDEF1",
+        "sex": "male",         // male | female | other
+        "xp": 1500, "xpMax": 20000, "restedXp": 300,
+        "zone": 1453,          // UI map ID; absent where the client has no map
+        "bindLocation": "Stormwind City",   // hearthstone, localized name
+        "guild": { "name": "Scryers", "rank": "Officer", "rankIndex": 1 },  // absent without a guild
+        "hardcore": false,
+        "experiencePreset": "enhanced",     // classic | enhanced
         "updatedAt": 1700003600
-      }
+      },
+      "money": { "copper": 1234567, "updatedAt": 1700003600 },
+      "bags": {                // backpack, bags, reagent bag
+        "items": { "2589": 24, "6948": 1 },  // item ID -> total count
+        "slots": { "total": 22, "free": 18 },
+        "vendorValue": 462,    // copper a vendor would pay for everything
+        "updatedAt": 1700003600
+      },
+      "bank": { /* same shape as bags; snapshot of the last bank visit */ },
+      "skills": {
+        "lines": { "171": { "rank": 150, "maxRank": 225 } },  // skill line ID
+        "updatedAt": 1700003600
+      },
+      "professions": {
+        "known": {
+          "171": {             // profession (skill line) ID
+            "recipes": [2329, 2330],   // known recipe spell IDs, ascending
+            "scannedAt": 1700003600    // when this profession's window was read
+          }
+        },
+        "updatedAt": 1700003600
+      },
+      "spells": {
+        "player": { "143": { "passive": false, "rank": 2 }, "11103": { "passive": true } },
+        "pet": { "17253": { "passive": false, "rank": 3 } },  // absent if no pet was seen
+        "updatedAt": 1700003600
+      },
+      "legacy": {              // WoW: Forever Legacy system
+        "points": { "earned": 7, "max": 50, "unspent": 3, "spent": 4 },
+        "trees": { "1187": { "5001": 1 }, "1188": {}, "1189": {} },  // tree ID -> node ID -> rank
+        "challenges": {        // completed Legacy Challenges, by achievement ID
+          "9001": { "earnedByMe": true, "points": 10, "date": "2026-11-22" }
+        },
+        "updatedAt": 1700003600
+      },
+      "equipment": {
+        "slots": { "1": { "itemID": 10504, "link": "|cff0070dd|Hitem:10504:...|h[Green Lens]|h|r" } },
+        "updatedAt": 1700003600
+      },
+      "talents": {
+        "specID": 63,          // absent when no specialization is chosen
+        "nodes": { "7001": 5 },             // talent node ID -> rank
+        "loadout": "CAEAAAAA...",           // importable in the talent window
+        "updatedAt": 1700003600
+      },
+      "reputations": { "factions": { "72": { "standing": 5, "value": 4200 } }, "updatedAt": 1700003600 },
+      "currencies": { "amounts": { "3485": 12 }, "updatedAt": 1700003600 },
+      "quests": { "completed": [7, 54, 783], "updatedAt": 1700003600 },
+      "pvp": { "honorableKills": 12, "highestRank": 0, "updatedAt": 1700003600 },
+      "played": { "total": 360000, "thisLevel": 1200, "updatedAt": 1700003600 }
     }
   }
 }
 ```
+
+### Section notes
+
+| Section | Updated | Notes |
+|---|---|---|
+| `character` | login, level up, XP gain, zone change, guild change, logout | |
+| `money` | login, whenever money changes | |
+| `bags` | login, whenever bag contents change | `vendorValue` counts items whose price the client has not loaded yet as 0; it corrects itself within the session. The game has no market prices: price `items` yourself for auction value. |
+| `bank` | **only while the bank window is open** | Character bank tabs. Absent until the first bank visit with the addon. |
+| `skills` | login, skill change | Skill levels of professions are here; skill lines under a collapsed header in the game's skill window may be missing. |
+| `professions` | **only when that profession's window is opened**, plus each newly learned recipe | A profession is absent until its window was opened once. Check `scannedAt`. |
+| `spells` | login, spellbook change | Known spells only. `rank` is absent for spells without ranks. `pet` keeps the last seen pet's spells. |
+| `legacy` | login, tree or point change; `challenges` a few seconds after login and on completion | `points.unspent`/`spent` are absent if the client did not report the point currency. Only nodes with a rank and completed challenges are listed. |
+| `equipment` | login, equipment change | Slot IDs: 1 head, 2 neck, 3 shoulder, 4 shirt, 5 chest, 6 waist, 7 legs, 8 feet, 9 wrist, 10 hands, 11-12 rings, 13-14 trinkets, 15 back, 16 main hand, 17 off hand, 18 ranged, 19 tabard. |
+| `talents` | login, talent or spec change | |
+| `reputations` | login, reputation change | `standing`: 1 Hated, 2 Hostile, 3 Unfriendly, 4 Neutral, 5 Friendly, 6 Honored, 7 Revered, 8 Exalted. Factions under a collapsed header may be missing. |
+| `currencies` | login, currency change | |
+| `quests` | login, quest turn-in | |
+| `pvp` | login, PvP kill | `highestRank` is the game's `PvPRanks` enum (0 none, 5-18 = rank 1-14). |
+| `played` | **only when the player types `/played`** | Absent until then. |
+
+Maps keyed by an ID (`items`, `lines`, `known`, `player`, `trees`, `slots`, ...)
+are objects with numeric string keys in JSON, also when empty.
 
 - Characters are keyed by GUID, which is unique and never changes. WoW: Forever
   has rulesets (Normal, PvP, ...) instead of realms; the ruleset is not exported

@@ -43,6 +43,23 @@ whenever a real game session teaches you something; cite the evidence.
 - **Names.** Characters have a first and a last name; `UnitName("player")`
   returned only the first name (`Welehu`), so names are not unique keys.
 
+- **Modern UI systems** (seen in game, 2026-11-23, level 36 mage). Forever uses
+  the Retail-style systems, not Classic ones: `C_SpellBook`, `C_TradeSkillUI`,
+  `C_SkillInfo`, class talents as a trait config (`C_ClassTalents`, `C_Traits`).
+  The bank is tab-based in the UI source (`C_Bank`); not yet seen in game.
+  Blizzard's Forever-specific UI code is in `Camelot/` folders of the UI
+  source (`./dev api --source`).
+- **Spells have ranks.** Each rank is its own spell ID and all learned ranks
+  are in the spellbook; the rank is the "Rank N" subtext. Non-rank subtexts
+  exist too ("Racial", "Comprehension").
+- **Profession recipes** are readable only for the open profession window:
+  `C_TradeSkillUI.GetAllRecipeIDs()` works there (returned 471 for Tailoring).
+  `C_SkillInfo` lists each profession twice (e.g. 185 and 2939, same rank).
+- **Legacy system.** Legacy Challenges are achievements (`GetAchievementInfo`
+  reports the year as years since 2000); the three Legacy trees are trait
+  trees readable at login without opening the Legacy window; IDs are in
+  `Constants.LegacyConsts`. Blizzard's code: `Blizzard_LegacySystem`.
+
 ## Working with the human
 
 - Iterate fast. Do not run `./dev wait` (blocks up to 9 minutes) unless the
@@ -125,9 +142,14 @@ Scry/                     the addon; exactly what ships and what gets deployed
   Core/DB.lua             ns.DB -> ScryDB (the contract), schema version, migrations
   Core/SelfTest.lua       in-game selftests
   Core/Slash.lua          /scry status | selftest | dev on|off | rl | shot
+  Core/Items.lua          ns.Items: container scan -> itemID counts + vendor value (bags, bank)
+  Core/Traits.lua         ns.TraitNodes: trait tree reader (talents, Legacy trees)
   Modules/Character.lua   reference data module: copy its structure
+  Modules/*.lua           one module per ScryDB section (money, bags, bank, skills, professions,
+                          spells, legacy, equipment, talents, reputations, currencies, quests, pvp, played)
 schema/ScryDB.schema.json the contract, machine readable
 docs/DATA_CONTRACT.md     the contract, for humans and external app authors
+docs/PROFILE_DESIGN.md    profile sections not built yet / not yet confirmed in game
 docs/DEV_ENVIRONMENT.md   machine setup
 tests/wow/                simulated client: init.lua (engine), api.lua (API stubs), serialize.lua
 tests/spec/*_spec.lua     busted specs; contract_spec.lua produces the golden file
