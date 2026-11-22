@@ -202,6 +202,23 @@ tools/docker/             pinned toolchain + API reference (Dockerfile, gen_api.
 5. Shape rules that keep the Lua-to-JSON mapping unambiguous are in
    `docs/DATA_CONTRACT.md` ("Shape rules").
 
+## Commits and pull requests
+
+- Changes reach `main` through a pull request that is squash-merged. The PR
+  title is a Conventional Commit (`feat:`, `fix:`, `ci:`, `docs:`, ...) and
+  becomes the commit on `main`. A change that breaks the data contract gets
+  a `!` and says so in the body.
+- To take a branch all the way to merged, use the `ship-pr` skill
+  (`.claude/skills/ship-pr/SKILL.md`): it opens the PR, waits for CI and the
+  automatic Claude review, handles findings, and merges when everything is
+  green and resolved.
+- CI (`check.yml`) is `./dev check --ci`. It proves the offline loop only,
+  so a merged PR can still be "in-game verification pending"; say so in the
+  PR body when that is the case.
+- `claude-code-review.yml` reviews every PR; `claude.yml` answers `@claude`
+  mentions. A PR that changes either of those two files gets no Claude
+  review, so change them in a PR of their own.
+
 ## Test harness in one screen
 
 ```lua

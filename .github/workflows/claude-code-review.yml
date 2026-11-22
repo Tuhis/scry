@@ -1,0 +1,112 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+# A new push supersedes the review of the old head: its comments would land on
+# a commit that is no longer the PR.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Default for every job; jobs widen it only where they need to.
+permissions:
+  contents: read
+
+jobs:
+  claude-review:
+    # Only review PRs from branches in this repo, opened by someone with write
+    # access. Fork PRs don't receive secrets.CLAUDE_CODE_OAUTH_TOKEN anyway, so
+    # without this they'd just fail noisily on every push; this skips them
+    # cleanly. To review an outside contribution, comment "@claude review this"
+    # on it — claude.yml handles that, gated the same way.
+    #
+    # tuhokuutio[bot] is the GitHub App the coding agent opens PRs as. It can
+    # push here, but GitHub reports an App's author_association as NONE, so it
+    # is named explicitly. A login cannot be spoofed, and the same-repo check
+    # still applies. allowed_bots below lets the action run for it too.
+    if: |
+      github.event.pull_request.head.repo.full_name == github.repository && (
+        contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association) ||
+        github.event.pull_request.user.login == 'tuhokuutio[bot]'
+      )
+
+    # The self-hosted pool, as check.yml's RUNNER POOL. The if:
+    # above already admits only this repository's writers.
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      # Reports the session's tokens and equivalent cost to the ioio telemetry
+      # collector as device-scry-ci. Turns itself off, without failing the
+      # run, if the secrets or Keycloak are unavailable. It writes the whole
+      # settings file, so the session's own env goes in `env` here: a second
+      # `env` passed to the Claude step would replace this one, not add to it.
+      - name: Claude telemetry settings
+        id: otel
+        uses: ./.github/actions/claude-otel
+        with:
+          client-id: ${{ secrets.CLAUDE_OTEL_CLIENT_ID }}
+          client-secret: ${{ secrets.CLAUDE_OTEL_CLIENT_SECRET }}
+          device-name: scry-ci
+          # Keep every subagent in the foreground. Headless -p mode ends the
+          # session when the main agent ends its turn, and it does not wait for
+          # background agents: a review that starts its reviewers with
+          # run_in_background exits before any of them reports back — no
+          # comment, green check. Several foreground Agent calls in one turn
+          # still run in parallel.
+          env: '{"CLAUDE_CODE_DISABLE_BACKGROUND_TASKS": "1"}'
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@f3b070c88125d33dbae5653df5f143101d4ea9dc # v1.0.276
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # The action refuses runs started by a bot unless it is listed; pushes
+          # to the agent's PRs come from tuhokuutio[bot].
+          allowed_bots: 'tuhokuutio[bot]'
+          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
+          plugins: 'code-review@claude-code-plugins'
+          settings: ${{ steps.otel.outputs.settings }}
+          prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          # The allowlist is the code-review plugin's own `allowed-tools`
+          # (plugins/code-review/commands/code-review.md), verbatim. Allowing the
+          # inline-comment tool alone denies every gh call, so the bot can
+          # neither read the PR nor post its "No issues found" summary and the
+          # review ends silently. All of these are gh reads except gh pr
+          # comment, which the plugin needs for the summary; nothing here
+          # builds or runs PR code.
+          claude_args: '--model claude-opus-5-5 --allowedTools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),mcp__github_inline_comment__create_inline_comment"'
+
+      # The action logs only permission_denials_count, never which calls were
+      # denied, so a review that ends silently leaves nothing to go on. Print
+      # the denied calls and keep the transcript. Not show_full_output: that
+      # dumps every tool result into the log.
+      - name: List denied tool calls
+        if: always() && steps.claude-review.outputs.execution_file != ''
+        env:
+          EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
+        run: |
+          jq -r '.[] | select(.type == "result") | .permission_denials // [] | .[]
+                 | "::warning title=Review bot tool denied::\(.tool_name) \(.tool_input | tojson)"' \
+            "$EXECUTION_FILE" || true
+
+      - name: Upload review transcript
+        if: always() && steps.claude-review.outputs.execution_file != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: claude-review-transcript-pr${{ github.event.pull_request.number }}-${{ github.run_attempt }}
+          path: ${{ steps.claude-review.outputs.execution_file }}
+          retention-days: 7
+          if-no-files-found: warn
