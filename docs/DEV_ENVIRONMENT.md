@@ -59,6 +59,18 @@ and `screenshot` exit with a message explaining that a WoW installation is
 needed. Work done there is "offline-verified"; in-game verification stays pending
 until someone runs the in-game loop on a machine with the game.
 
+## CI
+
+`.github/workflows/check.yml` runs `./dev check --ci` on every pull request and
+push to `main`. It runs on the self-hosted runner pool `ioio-k8s-scry` (an ARC
+scale set defined in the `ioio` gitops repo,
+`clusters/baremetal/actions-runners/scry.yaml`), selected through the
+`RUNNER_LABEL` repository variable. With the variable unset the job falls back
+to GitHub-hosted `ubuntu-latest`; deleting the variable is the way back to
+hosted runners without a commit. Each run's summary shows which pool it used.
+
+The pool starts runners on demand, so a job may wait about 90 seconds for one.
+
 ## Game-side setup (once)
 
 - Enable Scry in the addon list on the character select screen.
