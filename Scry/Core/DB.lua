@@ -3,7 +3,7 @@
 -- what is written here must be reflected there (./dev check enforces it).
 local _, ns = ...
 
-local SCHEMA_VERSION = 1
+local SCHEMA_VERSION = 2
 
 local DB = {}
 ns.DB = DB
@@ -11,6 +11,22 @@ DB.SCHEMA_VERSION = SCHEMA_VERSION
 
 -- migrations[n] upgrades a database from schemaVersion n to n + 1, in place.
 local migrations = {}
+
+-- v1 -> v2: WoW: Forever has no realms (GetRealmName() returns ""), so characters
+-- are keyed by their GUID instead of "Name-Realm", and the realm field is gone.
+-- Entries without a stored GUID cannot be re-keyed and are dropped.
+migrations[1] = function(db)
+	local byGuid = {}
+	for _, entry in pairs(db.characters or {}) do
+		---@type table?
+		local c = type(entry) == "table" and type(entry.character) == "table" and entry.character or nil
+		if c and type(c.guid) == "string" and c.guid ~= "" then
+			c.realm = nil
+			byGuid[c.guid] = entry
+		end
+	end
+	db.characters = byGuid
+end
 
 local function newDB()
 	return { schemaVersion = SCHEMA_VERSION, meta = {}, characters = {} }
@@ -41,9 +57,10 @@ function DB:Init()
 	db.meta.updatedAt = db.meta.updatedAt or GetServerTime()
 end
 
---- "Name-NormalizedRealm" of the logged in character. Valid from PLAYER_LOGIN on.
+--- GUID of the logged in character, e.g. "Player-6951-00BF5811". WoW: Forever has
+--- no realms, and the GUID is unique and stable. Valid from PLAYER_LOGIN on.
 function DB:CharKey()
-	return UnitName("player") .. "-" .. GetNormalizedRealmName()
+	return UnitGUID("player")
 end
 
 --- The current character's section for a module, created on demand.

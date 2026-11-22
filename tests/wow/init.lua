@@ -49,7 +49,7 @@ local function default_state()
 		uptime = 1000, -- seconds (GetTime)
 		locale = "enUS",
 		build = { version = "1.60.1", number = "71037", date = "Nov 1 2026", interface = 16001 },
-		realm = { name = "Argent Dawn", normalized = "ArgentDawn" },
+		realm = { name = "", normalized = "" }, -- WoW: Forever has no realms: both APIs return ""
 		player = {
 			name = "Tester",
 			guid = "Player-1234-0ABCDEF0",

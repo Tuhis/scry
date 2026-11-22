@@ -4,24 +4,46 @@ describe("core", function()
 	it("loads from the TOC and logs in without errors", function()
 		local wow = Wow.new():login()
 		wow:assertNoErrors()
-		assert.equals(1, wow.env.ScryDB.schemaVersion)
+		assert.equals(2, wow.env.ScryDB.schemaVersion)
 		assert.equals("0.1.0", wow.env.ScryDB.meta.addonVersion)
 		assert.equals(16001, wow.env.ScryDB.meta.interface)
 	end)
 
 	it("keeps data across a reload", function()
 		local wow = Wow.new():login()
-		wow.env.ScryDB.characters["Other-Realm"] = { character = { name = "Other" } }
+		wow.env.ScryDB.characters["Player-1-00000001"] = { character = { name = "Other" } }
 		wow:reload()
 		wow:assertNoErrors()
-		assert.equals("Other", wow.env.ScryDB.characters["Other-Realm"].character.name)
-		assert.is_table(wow.env.ScryDB.characters["Tester-ArgentDawn"])
+		assert.equals("Other", wow.env.ScryDB.characters["Player-1-00000001"].character.name)
+		assert.is_table(wow.env.ScryDB.characters["Player-1234-0ABCDEF0"])
+	end)
+
+	it("migrates v1 (keyed by Name-Realm) to v2 (keyed by GUID)", function()
+		local wow = Wow.new({
+			saved = [[ScryDB = {
+				schemaVersion = 1,
+				meta = { addonVersion = "0.1.0", gameVersion = "1.60.1", interface = 16001, updatedAt = 5 },
+				characters = {
+					["Old-"] = { character = { name = "Old", realm = "", class = "MAGE", race = "Gnome",
+						faction = "Alliance", level = 35, guid = "Player-6951-00BF5811", updatedAt = 5 } },
+					["NoGuid-Realm"] = { character = { name = "NoGuid", realm = "Realm" } },
+				},
+			}]],
+		}):login()
+		wow:assertNoErrors()
+		local chars = wow.env.ScryDB.characters
+		assert.equals(2, wow.env.ScryDB.schemaVersion)
+		assert.is_nil(chars["Old-"])
+		assert.is_nil(chars["NoGuid-Realm"])
+		assert.equals("Old", chars["Player-6951-00BF5811"].character.name)
+		assert.is_nil(chars["Player-6951-00BF5811"].character.realm)
+		assert.is_table(chars["Player-1234-0ABCDEF0"]) -- the logged in character
 	end)
 
 	it("resets a database written by a newer schema version", function()
 		local wow = Wow.new({ saved = 'ScryDB = { schemaVersion = 999, future = "stuff" }' }):login()
 		wow:assertNoErrors()
-		assert.equals(1, wow.env.ScryDB.schemaVersion)
+		assert.equals(2, wow.env.ScryDB.schemaVersion)
 		assert.is_nil(wow.env.ScryDB.future)
 	end)
 

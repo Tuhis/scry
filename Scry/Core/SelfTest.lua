@@ -38,5 +38,5 @@ end)
 
 SelfTest:Register("core: character key is well formed", function()
 	local key = ns.DB:CharKey()
-	assert(key:match("^[^%-]+%-[^%-%s]+$"), "unexpected character key: " .. key)
+	assert(type(key) == "string" and key:match("^Player%-%d+%-%x+$"), "unexpected character key: " .. tostring(key))
 end)

@@ -9,12 +9,13 @@
   "properties": {
     "schemaVersion": {
       "description": "Bumped on every breaking change to this schema.",
-      "const": 1
+      "const": 2
     },
     "meta": { "$ref": "#/$defs/meta" },
     "characters": {
-      "description": "One entry per character seen on this WoW account, keyed by \"Name-NormalizedRealm\".",
+      "description": "One entry per character seen on this WoW account, keyed by the character's GUID (WoW: Forever has no realms).",
       "type": "object",
+      "propertyNames": { "pattern": "^Player-[0-9]+-[0-9A-F]+$" },
       "additionalProperties": { "$ref": "#/$defs/characterEntry" }
     }
   },
@@ -46,15 +47,14 @@
     "character": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "realm", "class", "race", "faction", "level", "guid", "updatedAt"],
+      "required": ["name", "class", "race", "faction", "level", "guid", "updatedAt"],
       "properties": {
         "name": { "type": "string", "minLength": 1 },
-        "realm": { "description": "Display name of the realm, e.g. \"Argent Dawn\".", "type": "string", "minLength": 1 },
         "class": { "description": "Locale-independent class token, e.g. \"MAGE\".", "type": "string", "pattern": "^[A-Z]+$" },
         "race": { "description": "Locale-independent race token, e.g. \"Human\", \"NightElf\".", "type": "string" },
         "faction": { "enum": ["Alliance", "Horde", "Neutral"] },
         "level": { "type": "integer", "minimum": 1 },
-        "guid": { "type": "string", "pattern": "^Player-" },
+        "guid": { "description": "Same as the character's key.", "type": "string", "pattern": "^Player-[0-9]+-[0-9A-F]+$" },
         "updatedAt": { "$ref": "#/$defs/timestamp" }
       }
     }

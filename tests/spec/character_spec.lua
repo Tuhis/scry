@@ -10,13 +10,11 @@ describe("module: character", function()
 				class = { token = "SHAMAN" },
 				race = { token = "Orc" },
 			},
-			realm = { name = "Burning Legion", normalized = "BurningLegion" },
 		}):login()
 		wow:assertNoErrors()
-		local c = wow.env.ScryDB.characters["Thrall-BurningLegion"].character
+		local c = wow.env.ScryDB.characters["Player-1234-0ABCDEF0"].character
 		assert.same({
 			name = "Thrall",
-			realm = "Burning Legion",
 			class = "SHAMAN",
 			race = "Orc",
 			faction = "Horde",
@@ -31,7 +29,7 @@ describe("module: character", function()
 		wow:advance(60)
 		wow:fire("PLAYER_LEVEL_UP", 11) -- UnitLevel still returns the old level at this point
 		wow:assertNoErrors()
-		local c = wow.env.ScryDB.characters["Tester-ArgentDawn"].character
+		local c = wow.env.ScryDB.characters["Player-1234-0ABCDEF0"].character
 		assert.equals(11, c.level)
 		assert.equals(1700000060, c.updatedAt)
 		assert.equals(1700000060, wow.env.ScryDB.meta.updatedAt)
@@ -42,7 +40,7 @@ describe("module: character", function()
 		local saved = wow:logout()
 		local alt = Wow.new({ saved = saved, player = { name = "Alt", guid = "Player-1234-0ABCDEF1" } }):login()
 		alt:assertNoErrors()
-		assert.is_table(alt.env.ScryDB.characters["Tester-ArgentDawn"])
-		assert.is_table(alt.env.ScryDB.characters["Alt-ArgentDawn"])
+		assert.is_table(alt.env.ScryDB.characters["Player-1234-0ABCDEF0"])
+		assert.is_table(alt.env.ScryDB.characters["Player-1234-0ABCDEF1"])
 	end)
 end)

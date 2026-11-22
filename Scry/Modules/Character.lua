@@ -10,7 +10,6 @@ local function record(level)
 	local _, classToken = UnitClass("player")
 	local _, raceToken = UnitRace("player")
 	section.name = UnitName("player")
-	section.realm = GetRealmName()
 	section.class = classToken
 	section.race = raceToken
 	section.faction = UnitFactionGroup("player")
@@ -30,7 +29,6 @@ end)
 ns.SelfTest:Register("character: section is populated from the live client", function()
 	local s = ns.DB:Section("character")
 	assert(type(s.name) == "string" and s.name ~= "", "name")
-	assert(type(s.realm) == "string" and s.realm ~= "", "realm")
 	assert(type(s.class) == "string" and s.class == s.class:upper(), "class token: " .. tostring(s.class))
 	assert(type(s.race) == "string", "race token")
 	assert(

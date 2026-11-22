@@ -29,6 +29,30 @@ ran, and the checks, tests, schema and docs must stay truthful as you change thi
    game is available, say in-game verification is pending.
 6. Start a session on an unfamiliar machine with `./dev doctor`.
 
+## WoW: Forever facts (verified in game)
+
+Things about this client that differ from Retail/Classic. Add to this list
+whenever a real game session teaches you something; cite the evidence.
+
+- **No realms.** Characters are created on a *ruleset* (Normal, PvP,
+  Roleplaying, ..., one mega-server per ruleset and region), not a realm.
+  `GetRealmName()` and `GetNormalizedRealmName()` return `""` (seen in game,
+  2026-11-22). No API returns the ruleset; `C_GameRules` only has predicates
+  such as `IsHardcoreActive()`. Never key data by `Name-Realm`; ScryDB keys
+  characters by `UnitGUID("player")`, e.g. `Player-6951-00BF5811`.
+- **Names.** Characters have a first and a last name; `UnitName("player")`
+  returned only the first name (`Welehu`), so names are not unique keys.
+
+## Working with the human
+
+- Iterate fast. Do not run `./dev wait` (blocks up to 9 minutes) unless the
+  human agreed to it; after they say they reloaded, run `./dev report` and
+  `./dev sv`, which return immediately.
+- A newly deployed addon is picked up by a plain `/reload`; no client restart
+  is needed.
+- Look facts about WoW: Forever up on the web when the API reference and the
+  game session do not answer them.
+
 ## Commands
 
 Everything goes through `./dev` (`dev.cmd` on native Windows). The host only

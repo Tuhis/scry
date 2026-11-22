@@ -1,7 +1,7 @@
 
 ScryDB = {
 	["characters"] = {
-		["Tester-ArgentDawn"] = {
+		["Player-1234-0ABCDEF0"] = {
 			["character"] = {
 				["class"] = "MAGE",
 				["faction"] = "Alliance",
@@ -9,11 +9,10 @@ ScryDB = {
 				["level"] = 81,
 				["name"] = "Tester",
 				["race"] = "Human",
-				["realm"] = "Argent Dawn",
 				["updatedAt"] = 1700000120,
 			},
 		},
-		["Thrall-ArgentDawn"] = {
+		["Player-1234-0ABCDEF1"] = {
 			["character"] = {
 				["class"] = "SHAMAN",
 				["faction"] = "Horde",
@@ -21,7 +20,6 @@ ScryDB = {
 				["level"] = 70,
 				["name"] = "Thrall",
 				["race"] = "Orc",
-				["realm"] = "Argent Dawn",
 				["updatedAt"] = 1700003600,
 			},
 		},
@@ -32,5 +30,5 @@ ScryDB = {
 		["interface"] = 16001,
 		["updatedAt"] = 1700003600,
 	},
-	["schemaVersion"] = 1,
+	["schemaVersion"] = 2,
 }

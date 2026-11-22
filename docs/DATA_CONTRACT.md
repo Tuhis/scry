@@ -38,11 +38,11 @@ For reference, this repository's own conversion: `./dev sv` prints `ScryDB` as
 JSON (`./dev sv --file path/to/Scry.lua` for any copy of the file). The JSON
 Schema describes that JSON form.
 
-## Structure (schemaVersion 1)
+## Structure (schemaVersion 2)
 
 ```jsonc
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "meta": {
     "addonVersion": "0.1.0",
     "gameVersion": "1.60.1",   // client that last wrote the file
@@ -50,10 +50,9 @@ Schema describes that JSON form.
     "updatedAt": 1700003600    // last change to any section
   },
   "characters": {
-    "Thrall-ArgentDawn": {     // "<Name>-<NormalizedRealm>" (realm without spaces)
+    "Player-1234-0ABCDEF1": {  // the character's GUID (WoW: Forever has no realms)
       "character": {           // one section per addon module
         "name": "Thrall",
-        "realm": "Argent Dawn",
         "class": "SHAMAN",     // locale-independent token
         "race": "Orc",         // locale-independent token
         "faction": "Horde",    // Alliance | Horde | Neutral
@@ -66,6 +65,9 @@ Schema describes that JSON form.
 }
 ```
 
+- Characters are keyed by GUID, which is unique and never changes. WoW: Forever
+  has rulesets (Normal, PvP, ...) instead of realms; the ruleset is not exported
+  because the client API does not expose it.
 - All timestamps are Unix seconds (server time).
 - Every section carries its own `updatedAt`; a section is only as fresh as the
   last time that character was logged in with the addon enabled.
