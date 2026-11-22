@@ -26,9 +26,3 @@ schema valid, data inspected with `./dev sv`).
 | `auctions` | Own auctions (snapshot at the auction house) | Unknown whether Forever uses the modern auction house API (`C_AuctionHouse.GetOwnedAuctions`). |
 | `legacy.challenges` progress | Criteria progress of unfinished challenges | Only completed ones are stored now. |
 | Item detail | Per-stack item links instead of `itemID -> count` | Decided 2026-11-22: counts are enough for now. |
-
-## Known tooling gap
-
-`./dev sim` fails on `Talents.lua`: the simulator's own implementation of
-`C_Traits.GetConfigInfo` raises "TraitTree lookup failed" for its fake
-character. Every other module loads cleanly there.

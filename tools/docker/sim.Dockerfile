@@ -36,6 +36,54 @@ RUN if [ -n "${WOW_BUILD}" ]; then \
       f="data/products/${WOWLESS_PRODUCT}/build.yaml"; \
       sed -i "s/^build: .*/build: '${WOW_BUILD}'/; s/^hash: .*/hash: ${WOW_BUILD_HASH}/" "$f"; cat "$f"; \
     fi
+
+# WoW: Forever talent data. The pinned wowless models class talents the Retail
+# way (player spec 71, class-named skill line -> trait tree), which finds no
+# tree in Forever's database and makes C_Traits.GetConfigInfo raise. Forever has
+# one spec per class (ChrSpecialization) and one talent tree per class, linked
+# through SkillRaceClassInfo.ClassMask. Checked against a real character:
+# mage spec 1482 -> tree 1112. Also adds the TraitNodeInfo fields Forever's API
+# requires that wowless's GetNodeInfo does not return yet.
+# Drop these patches when wowless supports wowf talents itself.
+RUN <<'PATCH'
+set -e
+[ "${WOWLESS_PRODUCT}" = "wowf" ] || exit 0
+cat > data/sql/C_Traits.GetConfigInfo.sql <<'SQL'
+SELECT
+  sxt.TraitTreeID AS treeId,
+  spec.Name_lang AS specName
+FROM ChrSpecialization AS spec
+INNER JOIN SkillRaceClassInfo AS srci
+  ON (srci.ClassMask & (1 << (spec.ClassID - 1))) != 0
+INNER JOIN SkillLineXTraitTree AS sxt ON srci.SkillID = sxt.SkillLineID
+
+WHERE
+  spec.ID = ?1
+ORDER BY sxt.ID
+LIMIT 1
+SQL
+cat > data/sql/C_ClassTalents.GetTraitTreeForSpec.sql <<'SQL'
+SELECT sxt.TraitTreeID AS treeId
+FROM ChrSpecialization AS spec
+INNER JOIN SkillRaceClassInfo AS srci
+  ON (srci.ClassMask & (1 << (spec.ClassID - 1))) != 0
+INNER JOIN SkillLineXTraitTree AS sxt ON srci.SkillID = sxt.SkillLineID
+
+WHERE
+  spec.ID = ?1
+ORDER BY sxt.ID
+LIMIT 1
+SQL
+# The simulated player is a warrior: 1491 is Forever's warrior spec.
+sed -i 's/spec = 71, -- Arms/spec = 1491, -- Warrior (WoW: Forever)/' wowless/modules/units.lua
+grep -q 'spec = 1491' wowless/modules/units.lua
+sed -i \
+  -e 's/^    isVisible = false,$/    isVisible = false,\n    entryIDToRanksIncreased = {},\n    isDisplayError = false,\n    ranksIncreased = 0,\n    totalMaxRanks = 0,/' \
+  -e 's/^    isVisible = true,$/    isVisible = true,\n    entryIDToRanksIncreased = {},\n    isDisplayError = false,\n    ranksIncreased = 0,\n    totalMaxRanks = maxRanks,/' \
+  data/impl/C_Traits.GetNodeInfo.lua
+[ "$(grep -c totalMaxRanks data/impl/C_Traits.GetNodeInfo.lua)" = 2 ]
+PATCH
+
 RUN cmake --preset default
 RUN cmake --build --preset default --target "wowless_${WOWLESS_PRODUCT}" "${WOWLESS_PRODUCT}" \
  && chmod -R a+rwX /wowless

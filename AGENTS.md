@@ -107,6 +107,12 @@ Blizzard code.** Real Blizzard Lua/XML, stubbed game data: it proves the addon
 loads and runs without Lua errors next to the real UI. Game data is fake there
 (name `Unitname`, level 0, ...), so in-game selftests may fail in the simulator;
 only Lua errors count. "Errors not involving the addon" are simulator gaps.
+The simulator (wowless) is written for Retail; where its Retail assumptions
+break on Forever's data, `tools/docker/sim.Dockerfile` patches it (so far:
+class talents). If an error comes from the simulator's own `data/impl/*.lua`,
+fix it there the same way; try the patch in a throwaway container first
+(`docker run` the `scry-sim` image, edit, `HOME=/root cmake --build --preset
+default --target wowless_wowf wowf`), because a full image rebuild takes ~10 minutes.
 
 **3. In game, for everything that depends on real game data** (which is most of
 what this addon does). Requires a machine with WoW; a human has to press keys:
