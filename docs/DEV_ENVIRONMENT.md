@@ -82,6 +82,24 @@ access and for the coding agent's GitHub App. They need:
 | Claude GitHub App installed on the repo | Lets Claude post comments | Reviews and `@claude` fail |
 | Secrets `CLAUDE_OTEL_CLIENT_ID`, `CLAUDE_OTEL_CLIENT_SECRET` | Report token use to the ioio telemetry collector as device `scry-ci` (enroll with `enroll.sh register scry-ci`, ioio repo `docs/claude-telemetry.md`) | Telemetry is off; nothing fails |
 
+Setting them up, or replacing them (needs admin rights on the repository):
+
+- **Claude GitHub App:** <https://github.com/apps/claude> → Configure → add
+  this repository.
+- **`CLAUDE_CODE_OAUTH_TOKEN`:** run `claude setup-token` on a machine with a
+  browser, then `gh secret set CLAUDE_CODE_OAUTH_TOKEN -R Tuhis/scry` and paste
+  the token it printed.
+- **Telemetry:** create a single-use Initial Access Token in the Keycloak realm
+  `claude-telemetry`, run `enroll.sh register scry-ci` with `HOME` pointed at an
+  empty temporary directory, store `client_id` and `client_secret` from
+  `$HOME/.config/claude-otel/client.json` as the two secrets, and delete the
+  directory. To rotate, delete the client `device-scry-ci` in Keycloak and
+  register again.
+
+A pull request that changes `claude-code-review.yml` or `claude.yml` is not
+reviewed: the Claude action refuses to run from a workflow file that differs
+from the one on `main`, and the job reports success without reviewing.
+
 ## Game-side setup (once)
 
 - Enable Scry in the addon list on the character select screen.
