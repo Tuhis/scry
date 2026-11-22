@@ -588,6 +588,10 @@ def cmd_hook(args):
         payload = {}
     if payload.get("stop_hook_active"):
         return 0
+    # In CI (the Claude review workflows) the session only reads and comments,
+    # and check.yml is the gate; running it again from here would only cost time.
+    if os.environ.get("GITHUB_ACTIONS"):
+        return 0
     try:
         with open(stamp_path()) as f:
             if f.read() == check_fingerprint():

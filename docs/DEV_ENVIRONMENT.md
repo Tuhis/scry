@@ -71,6 +71,17 @@ hosted runners without a commit. Each run's summary shows which pool it used.
 
 The pool starts runners on demand, so a job may wait about 90 seconds for one.
 
+Two more workflows run Claude on pull requests, on the same pool:
+`claude-code-review.yml` reviews every PR automatically, and `claude.yml`
+answers comments that mention `@claude`. Both only act for people with write
+access and for the coding agent's GitHub App. They need:
+
+| Repository setting | Purpose | Without it |
+|---|---|---|
+| Secret `CLAUDE_CODE_OAUTH_TOKEN` | Lets the workflows run Claude Code | Reviews and `@claude` fail |
+| Claude GitHub App installed on the repo | Lets Claude post comments | Reviews and `@claude` fail |
+| Secrets `CLAUDE_OTEL_CLIENT_ID`, `CLAUDE_OTEL_CLIENT_SECRET` | Report token use to the ioio telemetry collector as device `scry-ci` (enroll with `enroll.sh register scry-ci`, ioio repo `docs/claude-telemetry.md`) | Telemetry is off; nothing fails |
+
 ## Game-side setup (once)
 
 - Enable Scry in the addon list on the character select screen.
