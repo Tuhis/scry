@@ -1,0 +1,13 @@
+## Interface: 16001
+## Title: Scry
+## Notes: Exports character data to SavedVariables for external apps.
+## Version: 0.1.0
+## SavedVariables: ScryDB, ScryDevDB
+
+BuildInfo.lua
+Core/Init.lua
+Core/Log.lua
+Core/DB.lua
+Core/SelfTest.lua
+Core/Slash.lua
+Modules/Character.lua

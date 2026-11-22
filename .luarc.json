@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/lua-language-server/master/doc/schema.json",
+  "runtime.version": "Lua 5.1",
+  "workspace.library": ["/opt/wow-api/annotations/Core", "/opt/wow-api/annotations/FrameXML"],
+  "workspace.checkThirdParty": false,
+  "diagnostics.globals": ["ScryDB", "ScryDevDB", "SLASH_SCRY1"],
+  "diagnostics.disable": ["lowercase-global", "undefined-global"]
+}

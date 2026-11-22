@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Tuhis/scry/schema/ScryDB.schema.json",
+  "title": "ScryDB",
+  "description": "The ScryDB SavedVariable written by the Scry addon, after conversion to JSON (./dev sv). Unknown properties are forbidden on purpose: the addon may not write anything this schema does not describe.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "meta", "characters"],
+  "properties": {
+    "schemaVersion": {
+      "description": "Bumped on every breaking change to this schema.",
+      "const": 1
+    },
+    "meta": { "$ref": "#/$defs/meta" },
+    "characters": {
+      "description": "One entry per character seen on this WoW account, keyed by \"Name-NormalizedRealm\".",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/characterEntry" }
+    }
+  },
+  "$defs": {
+    "timestamp": {
+      "description": "Unix time in seconds (server time).",
+      "type": "integer",
+      "minimum": 0
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["addonVersion", "gameVersion", "interface", "updatedAt"],
+      "properties": {
+        "addonVersion": { "type": "string" },
+        "gameVersion": { "description": "Client version that last wrote the file, e.g. \"1.60.1\".", "type": "string" },
+        "interface": { "description": "Client interface number, e.g. 16001.", "type": "integer" },
+        "updatedAt": { "description": "Last time any section changed.", "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "characterEntry": {
+      "description": "Per-character data: one section per addon module, each with its own updatedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "character": { "$ref": "#/$defs/character" }
+      }
+    },
+    "character": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "realm", "class", "race", "faction", "level", "guid", "updatedAt"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "realm": { "description": "Display name of the realm, e.g. \"Argent Dawn\".", "type": "string", "minLength": 1 },
+        "class": { "description": "Locale-independent class token, e.g. \"MAGE\".", "type": "string", "pattern": "^[A-Z]+$" },
+        "race": { "description": "Locale-independent race token, e.g. \"Human\", \"NightElf\".", "type": "string" },
+        "faction": { "enum": ["Alliance", "Horde", "Neutral"] },
+        "level": { "type": "integer", "minimum": 1 },
+        "guid": { "type": "string", "pattern": "^Player-" },
+        "updatedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# local machine settings and tool state
+.scry.local.json
+.scry/
+__pycache__/
+*.pyc

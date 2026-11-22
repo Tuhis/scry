@@ -1,0 +1,13 @@
+name: check
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Builds the pinned toolchain image (tools/docker/Dockerfile) and runs the same
+      # gate developers and agents run locally. --ci verifies formatting instead of applying it.
+      - run: ./dev check --ci
