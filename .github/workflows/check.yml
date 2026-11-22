@@ -36,7 +36,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Report runner pool
-        run: echo "Runner label: ${{ vars.RUNNER_LABEL || 'ubuntu-latest (RUNNER_LABEL unset)' }}" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Runner label: ${{ vars.RUNNER_LABEL || 'ubuntu-latest (RUNNER_LABEL unset)' }}" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@v4
       # Builds the pinned toolchain image and runs the gate. --ci verifies
       # formatting instead of applying it.
