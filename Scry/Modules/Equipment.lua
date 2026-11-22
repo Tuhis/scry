@@ -13,6 +13,7 @@ local function record()
 		local itemID = GetInventoryItemID("player", slot)
 		if itemID then
 			slots[slot] = { itemID = itemID, link = GetInventoryItemLink("player", slot) }
+			ns.Items:Name(itemID)
 		end
 	end
 	section.slots = slots

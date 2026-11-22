@@ -49,6 +49,19 @@ Schema describes that JSON form.
     "interface": 16001,
     "updatedAt": 1700003600    // last change to any section
   },
+  "names": {                   // ID -> display name, see "Names" below
+    "locale": "enUS",
+    "items": { "2589": "Linen Cloth" },
+    "spells": { "143": "Fireball", "2330": "Elixir of Minor Fortitude" },
+    "skills": { "171": "Alchemy" },
+    "factions": { "72": "Stormwind" },
+    "currencies": { "3485": "Renown" },
+    "achievements": { "9001": "Keeper of the Flame" },
+    "traitNodes": { "7001": "Improved Fireball" },
+    "maps": { "1453": "Stormwind City" },
+    "specs": { "63": "Fire" },
+    "quests": { "7": "Kobold Camp Cleanup" }
+  },
   "characters": {
     "Player-1234-0ABCDEF1": {  // the character's GUID (WoW: Forever has no realms)
       "character": {           // one section per addon module
@@ -143,6 +156,34 @@ Schema describes that JSON form.
 
 Maps keyed by an ID (`items`, `lines`, `known`, `player`, `trees`, `slots`, ...)
 are objects with numeric string keys in JSON, also when empty.
+
+### Names
+
+The sections above hold IDs only. `names` is the lookup table that turns them
+into text, one map per kind of ID:
+
+| Map | Names the IDs in |
+|---|---|
+| `items` | `bags.items`, `bank.items`, `equipment.slots[].itemID` |
+| `spells` | `spells.player`, `spells.pet`, `professions.known[].recipes` (recipes are spells) |
+| `skills` | `skills.lines`, `professions.known` |
+| `factions` | `reputations.factions` |
+| `currencies` | `currencies.amounts` |
+| `achievements` | `legacy.challenges` |
+| `traitNodes` | `talents.nodes`, `legacy.trees[]` |
+| `maps` | `character.zone` |
+| `specs` | `talents.specID` |
+| `quests` | `quests.completed` |
+
+- Names are in the game client's language, given by `names.locale`. When the
+  player switches language the whole table is dropped and collected again.
+- The table is shared by all characters and only grows: a name is added when the
+  addon exports an ID and the client knows its name. It is **best effort**: an ID
+  can be missing (the client loads item and quest names from the server on
+  demand, usually within the same session). Fall back to showing the ID.
+- All ranks of a spell share one name; the rank is in `spells`.
+- Equipment names are the base item's name; the full name with a random suffix
+  ("... of the Hierophant") is inside `equipment.slots[].link`.
 
 - Characters are keyed by GUID, which is unique and never changes. WoW: Forever
   has rulesets (Normal, PvP, ...) instead of realms; the ruleset is not exported

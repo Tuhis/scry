@@ -28,6 +28,10 @@ migrations[1] = function(db)
 	db.characters = byGuid
 end
 
+-- ScryDB.names: ID -> display name, per kind of ID, for every ID the addon exports.
+local NAME_KINDS =
+	{ "items", "spells", "skills", "factions", "currencies", "achievements", "traitNodes", "maps", "specs", "quests" }
+
 local function newDB()
 	return { schemaVersion = SCHEMA_VERSION, meta = {}, characters = {} }
 end
@@ -49,6 +53,15 @@ function DB:Init()
 	end
 	ScryDB = db
 	self.db = db
+
+	-- Names are in the client's language: start over when it changes.
+	local locale = GetLocale()
+	if type(db.names) ~= "table" or db.names.locale ~= locale then
+		db.names = { locale = locale }
+	end
+	for _, kind in ipairs(NAME_KINDS) do
+		db.names[kind] = db.names[kind] or {}
+	end
 
 	local gameVersion, _, _, interface = GetBuildInfo()
 	db.meta.addonVersion = ns.version
@@ -83,6 +96,14 @@ end
 function DB:Peek(moduleName)
 	local char = self.db.characters[self:CharKey()]
 	return char and char[moduleName]
+end
+
+--- Remember the display name of an exported ID. `kind` is one of NAME_KINDS.
+--- Does nothing when the client has no name (yet).
+function DB:Name(kind, id, text)
+	if id and type(text) == "string" and text ~= "" then
+		self.db.names[kind][id] = text
+	end
 end
 
 --- Stamp a section (and the database) as modified now. Call after every write.

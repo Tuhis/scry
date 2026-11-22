@@ -237,6 +237,12 @@ return function(wow, env)
 		end,
 	})
 	env.C_Map = wow:namespace("C_Map", {
+		GetMapInfo = function(uiMapID) -- nothing for an unknown map
+			local name = state.mapNames[uiMapID]
+			if name then
+				return { mapID = uiMapID, name = name, mapType = 3, parentMapID = 0, flags = 0 }
+			end
+		end,
 		GetBestMapForUnit = function(unit)
 			return player(unit) and state.player.zone or nil
 		end,
@@ -349,7 +355,7 @@ return function(wow, env)
 			local t = state.tradeskill
 			return {
 				professionID = t.ready and t.professionID or 0,
-				professionName = "",
+				professionName = t.ready and t.name or "",
 				skillLevel = 0,
 				maxSkillLevel = 0,
 			}
@@ -425,6 +431,9 @@ return function(wow, env)
 		GetSpellSubtext = function(spellID)
 			return state.spellSubtext[spellID]
 		end,
+		GetSpellName = function(spellID) -- nothing for an unknown spell
+			return state.spellNames[spellID]
+		end,
 	})
 
 	-- Traits (class talents and Legacy trees). state.traits: treeConfigs[treeID] = configID,
@@ -444,7 +453,9 @@ return function(wow, env)
 			for _, nodes in pairs(state.traits.trees) do
 				if nodes[nodeID] then
 					return {
-						ID = nodeID,
+						ID = nodeID, -- simplification: a node's only entry and its definition share its ID
+						entryIDs = { nodeID },
+						activeEntry = nodes[nodeID] > 0 and { entryID = nodeID, rank = nodes[nodeID] } or nil,
 						activeRank = nodes[nodeID],
 						currentRank = nodes[nodeID],
 						ranksPurchased = nodes[nodeID],
@@ -453,6 +464,19 @@ return function(wow, env)
 				end
 			end
 			return { ID = 0, activeRank = 0, currentRank = 0, ranksPurchased = 0, maxRanks = 0 }
+		end,
+		GetEntryInfo = function(_, entryID)
+			return {
+				definitionID = entryID,
+				type = 2,
+				maxRanks = 5,
+				isAvailable = true,
+				isDisplayError = false,
+				conditionIDs = {},
+			}
+		end,
+		GetDefinitionInfo = function(definitionID) -- state.traits.definitions[id] = { spellID or overrideName }
+			return state.traits.definitions[definitionID] or {}
 		end,
 		GetTreeCurrencyInfo = function()
 			return { state.traits.currency }
@@ -576,6 +600,12 @@ return function(wow, env)
 		end,
 	})
 	env.C_QuestLog = wow:namespace("C_QuestLog", {
+		GetTitleForQuestID = function(questID) -- nil until the quest data is loaded
+			return state.questTitles[questID]
+		end,
+		RequestLoadQuestByID = function(questID)
+			wow.questRequests[#wow.questRequests + 1] = questID
+		end,
 		GetAllCompletedQuestIDs = function()
 			local ids = {}
 			for i, id in ipairs(state.quests) do

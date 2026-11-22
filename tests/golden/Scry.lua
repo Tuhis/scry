@@ -325,5 +325,54 @@ ScryDB = {
 		["interface"] = 16001,
 		["updatedAt"] = 1700003600,
 	},
+	["names"] = {
+		["achievements"] = {
+			[9001] = "Challenge 9001",
+			[9003] = "Challenge 9003",
+		},
+		["currencies"] = {
+			[3485] = "Renown",
+		},
+		["factions"] = {
+			[47] = "Ironforge",
+			[72] = "Stormwind",
+		},
+		["items"] = {
+			[2092] = "Worn Dagger",
+			[2318] = "Light Leather",
+			[2589] = "Linen Cloth",
+			[6948] = "Hearthstone",
+			[10504] = "Green Lens",
+		},
+		["locale"] = "enUS",
+		["maps"] = {
+			[1453] = "Stormwind City",
+		},
+		["quests"] = {
+			[7] = "Kobold Camp Cleanup",
+			[783] = "A Threat Within",
+		},
+		["skills"] = {
+			[43] = "Swords",
+			[171] = "Alchemy",
+		},
+		["specs"] = {
+			[63] = "Fire",
+		},
+		["spells"] = {
+			[133] = "Fireball",
+			[143] = "Fireball",
+			[2329] = "Recipe 2329",
+			[2330] = "Recipe 2330",
+			[6603] = "Auto Attack",
+			[11103] = "Impact",
+			[17253] = "Bite",
+		},
+		["traitNodes"] = {
+			[5001] = "Master Craftsman",
+			[5101] = "Wanderer",
+			[7001] = "Improved Fireball",
+		},
+	},
 	["schemaVersion"] = 2,
 }

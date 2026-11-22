@@ -10,6 +10,7 @@ local function record()
 		local info = C_SkillInfo.GetSkillLineInfo(index)
 		if info and not info.isHeader and info.skillID then
 			lines[info.skillID] = { rank = info.rank, maxRank = info.maxRank }
+			ns.DB:Name("skills", info.skillID, info.name)
 		end
 	end
 	section.lines = lines

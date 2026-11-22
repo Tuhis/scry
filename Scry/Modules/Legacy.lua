@@ -49,9 +49,10 @@ local function recordChallenges()
 	for _, categoryID in ipairs(categories) do
 		local numAchievements = GetCategoryNumAchievements(categoryID) or 0
 		for index = 1, numAchievements do
-			local id, _, _, completed, month, day, year, _, _, _, _, _, earnedByMe =
+			local id, name, _, completed, month, day, year, _, _, _, _, _, earnedByMe =
 				GetAchievementInfo(categoryID, index)
 			if id and completed then
+				ns.DB:Name("achievements", id, name)
 				local challenge = {
 					earnedByMe = earnedByMe and true or false,
 					points = C_Traits.GetTraitCurrencyForAchievement(pointsCurrency, id) or 0,

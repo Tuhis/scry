@@ -148,6 +148,7 @@ Scry/                     the addon; exactly what ships and what gets deployed
   Core/DB.lua             ns.DB -> ScryDB (the contract), schema version, migrations
   Core/SelfTest.lua       in-game selftests
   Core/Slash.lua          /scry status | selftest | dev on|off | rl | shot
+  Core/DB.lua also holds ScryDB.names (ID -> display name): call ns.DB:Name(kind, id, text) for every exported ID
   Core/Items.lua          ns.Items: container scan -> itemID counts + vendor value (bags, bank)
   Core/Traits.lua         ns.TraitNodes: trait tree reader (talents, Legacy trees)
   Modules/Character.lua   reference data module: copy its structure

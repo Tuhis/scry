@@ -10,6 +10,7 @@ local function record()
 		local data = C_Reputation.GetFactionDataByIndex(index)
 		if data and data.factionID and data.factionID > 0 and (not data.isHeader or data.isHeaderWithRep) then
 			factions[data.factionID] = { standing = data.reaction, value = data.currentStanding }
+			ns.DB:Name("factions", data.factionID, data.name)
 		end
 	end
 	section.factions = factions

@@ -10,6 +10,7 @@ local function record()
 		local info = C_CurrencyInfo.GetCurrencyListInfo(index)
 		if info and not info.isHeader and info.currencyID and info.currencyID > 0 then
 			amounts[info.currencyID] = info.quantity
+			ns.DB:Name("currencies", info.currencyID, info.name)
 		end
 	end
 	section.amounts = amounts

@@ -26,6 +26,8 @@ local function record(level)
 	section.xpMax = UnitXPMax("player")
 	section.restedXp = GetXPExhaustion() or 0
 	section.zone = C_Map.GetBestMapForUnit("player") -- nil where the map is unknown
+	local map = section.zone and C_Map.GetMapInfo(section.zone)
+	ns.DB:Name("maps", section.zone, map and map.name)
 	section.bindLocation = GetBindLocation()
 	local guildName, guildRankName, guildRankIndex = GetGuildInfo("player")
 	section.guild = guildName and { name = guildName, rank = guildRankName, rankIndex = guildRankIndex } or nil

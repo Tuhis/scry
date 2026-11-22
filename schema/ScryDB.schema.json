@@ -5,13 +5,14 @@
   "description": "The ScryDB SavedVariable written by the Scry addon, after conversion to JSON (./dev sv). Unknown properties are forbidden on purpose: the addon may not write anything this schema does not describe.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "meta", "characters"],
+  "required": ["schemaVersion", "meta", "names", "characters"],
   "properties": {
     "schemaVersion": {
       "description": "Bumped on every breaking change to this schema.",
       "const": 2
     },
     "meta": { "$ref": "#/$defs/meta" },
+    "names": { "$ref": "#/$defs/names" },
     "characters": {
       "description": "One entry per character seen on this WoW account, keyed by the character's GUID (WoW: Forever has no realms).",
       "type": "object",
@@ -36,6 +37,30 @@
         "gameVersion": { "description": "Client version that last wrote the file, e.g. \"1.60.1\".", "type": "string" },
         "interface": { "description": "Client interface number, e.g. 16001.", "type": "integer" },
         "updatedAt": { "description": "Last time any section changed.", "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "nameMap": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/idKeys" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "names": {
+      "description": "Display names for the IDs used elsewhere in this file, in the game client's language. Shared by all characters; a name is added when the addon first sees the ID and the client knows its name, so an ID can be missing here.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locale", "items", "spells", "skills", "factions", "currencies", "achievements", "traitNodes", "maps", "specs", "quests"],
+      "properties": {
+        "locale": { "description": "Client language of the names, e.g. \"enUS\". All names are dropped and collected again when it changes.", "type": "string" },
+        "items": { "description": "Item ID -> item name (bags, bank, equipment).", "$ref": "#/$defs/nameMap" },
+        "spells": { "description": "Spell ID -> spell name (spellbook spells and profession recipes).", "$ref": "#/$defs/nameMap" },
+        "skills": { "description": "Skill line ID -> name (skills, professions).", "$ref": "#/$defs/nameMap" },
+        "factions": { "description": "Faction ID -> name (reputations).", "$ref": "#/$defs/nameMap" },
+        "currencies": { "description": "Currency ID -> name.", "$ref": "#/$defs/nameMap" },
+        "achievements": { "description": "Achievement ID -> name (Legacy Challenges).", "$ref": "#/$defs/nameMap" },
+        "traitNodes": { "description": "Trait node ID -> name (talents and Legacy trees).", "$ref": "#/$defs/nameMap" },
+        "maps": { "description": "UI map ID -> zone name (character.zone).", "$ref": "#/$defs/nameMap" },
+        "specs": { "description": "Specialization ID -> name (talents.specID).", "$ref": "#/$defs/nameMap" },
+        "quests": { "description": "Quest ID -> title (quests.completed).", "$ref": "#/$defs/nameMap" }
       }
     },
     "characterEntry": {

@@ -7,14 +7,29 @@ ns.Items = Items
 
 -- Sections whose vendorValue is incomplete because item data was not cached yet.
 local unpriced = {}
+-- Items whose name was asked for before the client had their data.
+local unnamed = {}
+
+--- Record the item's name in ScryDB.names, now or when the client has loaded it.
+function Items:Name(itemID)
+	local name = C_Item.GetItemInfo(itemID)
+	if name then
+		ns.DB:Name("items", itemID, name)
+		unnamed[itemID] = nil
+	elseif not unnamed[itemID] then
+		unnamed[itemID] = true
+		C_Item.RequestLoadItemDataByID(itemID)
+	end
+end
 
 --- Vendor value in copper of an itemID -> count map. Second result: number of
 --- items whose price is not known yet (their data is requested from the server).
 function Items:VendorValue(items)
 	local value, missing = 0, 0
 	for itemID, count in pairs(items) do
-		local sellPrice = select(11, C_Item.GetItemInfo(itemID))
+		local name, _, _, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemID)
 		if sellPrice then
+			ns.DB:Name("items", itemID, name)
 			value = value + sellPrice * count
 		else
 			missing = missing + 1
@@ -51,7 +66,10 @@ function Items:Record(section, bagIDs)
 	ns.DB:Touch(section)
 end
 
-ns:On("GET_ITEM_INFO_RECEIVED", function()
+ns:On("GET_ITEM_INFO_RECEIVED", function(itemID, success)
+	if success and unnamed[itemID] then
+		Items:Name(itemID)
+	end
 	if not next(unpriced) then
 		return
 	end

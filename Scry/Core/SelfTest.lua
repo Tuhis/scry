@@ -40,3 +40,16 @@ SelfTest:Register("core: character key is well formed", function()
 	local key = ns.DB:CharKey()
 	assert(type(key) == "string" and key:match("^Player%-%d+%-%x+$"), "unexpected character key: " .. tostring(key))
 end)
+
+SelfTest:Register("names: exported IDs have names in the client's language", function()
+	local names = ScryDB.names
+	assert(names.locale == GetLocale(), "locale: " .. tostring(names.locale))
+	-- These are known to the client at login without a server round trip.
+	for kind, map in pairs({ spells = names.spells, skills = names.skills, factions = names.factions }) do
+		assert(next(map) ~= nil, "no " .. kind .. " names recorded")
+	end
+	local spells = ns.DB:Section("spells").player or {}
+	for spellID in pairs(spells) do
+		assert(names.spells[spellID], "spell without a name: " .. spellID)
+	end
+end)

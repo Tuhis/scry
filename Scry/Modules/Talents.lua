@@ -6,8 +6,12 @@ local Talents = ns:NewModule("talents")
 local function record()
 	local section = ns.DB:Section("talents")
 	local specIndex = C_SpecializationInfo.GetSpecialization()
-	local specID = specIndex and specIndex > 0 and C_SpecializationInfo.GetSpecializationInfo(specIndex) or nil
+	local specID, specName
+	if specIndex and specIndex > 0 then
+		specID, specName = C_SpecializationInfo.GetSpecializationInfo(specIndex)
+	end
 	section.specID = specID and specID > 0 and specID or nil
+	ns.DB:Name("specs", section.specID, specName)
 
 	local nodes = {}
 	local configID = C_ClassTalents.GetActiveConfigID()

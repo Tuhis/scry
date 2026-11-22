@@ -30,11 +30,13 @@ local function scan()
 		local recipe = C_TradeSkillUI.GetRecipeInfo(recipeID)
 		if recipe and recipe.learned then
 			recipes[#recipes + 1] = recipeID
+			ns.DB:Name("spells", recipeID, recipe.name)
 		end
 	end
 	table.sort(recipes)
 	local section, list = known()
 	list[professionID] = { recipes = recipes, scannedAt = GetServerTime() }
+	ns.DB:Name("skills", professionID, info.professionName)
 	ns.DB:Touch(section)
 	ns.Log:Debug(("professions: %s scanned, %d of %d recipes known"):format(professionID, #recipes, #all))
 end
@@ -57,6 +59,8 @@ ns:On("NEW_RECIPE_LEARNED", function(recipeID)
 		end
 	end
 	table.insert(entry.recipes, recipeID)
+	local recipe = C_TradeSkillUI.GetRecipeInfo(recipeID)
+	ns.DB:Name("spells", recipeID, recipe and recipe.name)
 	table.sort(entry.recipes)
 	ns.DB:Touch(section)
 end)

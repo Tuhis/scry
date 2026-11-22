@@ -20,6 +20,7 @@ local function readSlot(out, slot, bank)
 	local info = C_SpellBook.GetSpellBookItemInfo(slot, bank)
 	if info and info.spellID and info.itemType == Enum.SpellBookItemType.Spell and not info.isOffSpec then
 		out[info.spellID] = entry(info)
+		ns.DB:Name("spells", info.spellID, info.name)
 		return info
 	end
 end

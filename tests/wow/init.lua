@@ -72,6 +72,8 @@ local function default_state()
 			[6948] = { name = "Hearthstone", sellPrice = 0 },
 			[2589] = { name = "Linen Cloth", sellPrice = 13 },
 			[2318] = { name = "Light Leather", sellPrice = 15 },
+			[10504] = { name = "Green Lens", sellPrice = 6000 },
+			[2092] = { name = "Worn Dagger", sellPrice = 7 },
 		},
 		bags = { -- by Enum.BagIndex: size, slots[slot] = { id, count }
 			[0] = {
@@ -102,6 +104,7 @@ local function default_state()
 			guild = false,
 			npc = false,
 			professionID = 171,
+			name = "Alchemy",
 			recipes = { [2330] = true, [2332] = false, [2329] = true },
 			recipeProfession = { [2330] = 171, [2332] = 171, [2329] = 171 },
 		},
@@ -121,6 +124,9 @@ local function default_state()
 			pet = false, -- or a list of items
 		},
 		spellSubtext = {}, -- C_Spell.GetSpellSubtext by spell ID
+		spellNames = { [12345] = "Improved Fireball" }, -- C_Spell.GetSpellName by spell ID
+		mapNames = { [1453] = "Stormwind City" }, -- C_Map.GetMapInfo by uiMapID
+		questTitles = { [7] = "Kobold Camp Cleanup", [783] = "A Threat Within" }, -- loaded quest titles
 		traits = {
 			treeConfigs = { [1187] = 101, [1188] = 102, [1189] = 103 },
 			configs = { [200] = { ID = 200, type = 1, name = "Fire", treeIDs = { 900 }, usesSharedActionBars = false } },
@@ -129,6 +135,11 @@ local function default_state()
 				[1188] = { [5101] = 3 },
 				[1189] = {},
 				[900] = { [7001] = 5, [7002] = 0, [7003] = 2 },
+			},
+			definitions = { -- by definition ID (= node ID in the stub)
+				[5001] = { overrideName = "Master Craftsman" },
+				[5101] = { overrideName = "Wanderer" },
+				[7001] = { spellID = 12345 },
 			},
 			currency = { traitCurrencyID = 4225, quantity = 3, spent = 4 },
 			maxAvailable = 50,
@@ -186,6 +197,7 @@ function Wow.new(opts)
 	self.reloadRequested = false
 	self.screenshots = 0
 	self.itemRequests = {} -- item IDs passed to C_Item.RequestLoadItemDataByID
+	self.questRequests = {} -- quest IDs passed to C_QuestLog.RequestLoadQuestByID
 	self:_reset()
 	return self
 end
