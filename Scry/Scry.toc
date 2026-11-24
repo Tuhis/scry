@@ -1,7 +1,9 @@
 ## Interface: 16001
 ## Title: Scry
 ## Notes: Exports character data to SavedVariables for external apps.
+# x-release-please-start-version
 ## Version: 0.1.0
+# x-release-please-end
 ## SavedVariables: ScryDB, ScryDevDB
 
 BuildInfo.lua

@@ -182,6 +182,8 @@ function Wow.new(opts)
 	self.addonName = self.addonDir:match("([^/]+)$")
 	self.dev = opts.dev or false
 	self.saved = opts.saved
+	-- Replaces the TOC's ## Version, which release-please bumps on every release.
+	self.addonVersion = opts.addonVersion
 	self.state = default_state()
 	for k, v in pairs(opts) do
 		if self.state[k] ~= nil then
@@ -436,6 +438,7 @@ end
 function Wow:login(isReload)
 	assert(not self.loggedIn, "already logged in; use wow:reload()")
 	self.toc = parse_toc(self.addonDir .. "/" .. self.addonName .. ".toc")
+	self.toc.meta.Version = self.addonVersion or self.toc.meta.Version
 	for _, file in ipairs(self.toc.files) do
 		local chunk, err = loadfile(self.addonDir .. "/" .. file)
 		if not chunk then

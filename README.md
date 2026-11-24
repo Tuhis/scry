@@ -11,6 +11,18 @@ its work, and you press `/reload` in game when it asks.
 - Machine setup: [docs/DEV_ENVIRONMENT.md](docs/DEV_ENVIRONMENT.md).
 - What the addon exports, for authors of external apps: [docs/DATA_CONTRACT.md](docs/DATA_CONTRACT.md).
 
+## Installing (players)
+
+1. Download `Scry-X.Y.Z.zip` from the newest
+   [release](https://github.com/Tuhis/scry/releases/latest).
+2. Unzip it into `World of Warcraft\_forever_\Interface\AddOns\`, so that
+   `AddOns\Scry\Scry.toc` exists. To update, delete the old `Scry` folder first.
+3. Restart the game (a newly added addon is not picked up by `/reload`) and
+   check that Scry is enabled in the AddOns list on the character screen.
+
+Your recorded data lives in `WTF\Account\<account>\SavedVariables\Scry.lua`
+and survives updates; newer versions migrate it automatically.
+
 ## Requirements
 
 - Python 3.9+ and Docker. That is all for the offline loop; every other tool

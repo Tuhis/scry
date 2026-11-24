@@ -16,6 +16,7 @@ local function scenario()
 	-- First character: everything the addon can record, including the data that
 	-- needs a window (bank, profession) or a player action (/played).
 	local wow = Wow.new({
+		addonVersion = "0.1.0", -- pinned: the TOC's version changes with every release
 		player = { guild = { name = "Scryers", rankName = "Officer", rankIndex = 1 } },
 		spellbook = { pet = { { spellID = 17253, name = "Bite", subName = "Rank 3" } } },
 	}):login()
@@ -30,6 +31,7 @@ local function scenario()
 	local saved = wow:logout()
 
 	local alt = Wow.new({
+		addonVersion = "0.1.0",
 		saved = saved,
 		time = 1700003600,
 		player = {

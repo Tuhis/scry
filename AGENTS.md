@@ -219,6 +219,14 @@ tools/docker/             pinned toolchain + API reference (Dockerfile, gen_api.
   (`.claude/skills/ship-pr/SKILL.md`): it opens the PR, waits for CI and the
   automatic Claude review, handles findings, and merges when everything is
   green and resolved.
+- Releases are automated by release-please (`release.yml`, config in
+  `release-please-config.json`). Every push to `main` updates a release PR
+  whose version bump and `CHANGELOG.md` entry come from the Conventional
+  Commit titles: `fix:` -> patch, `feat:` -> minor, `!` -> major; `ci:`,
+  `docs:`, `test:`, `chore:`, `refactor:` make no release. Merging that PR
+  tags `vX.Y.Z` and attaches `Scry-X.Y.Z.zip` (the `Scry/` folder) to the
+  GitHub Release. Never edit `## Version` in `Scry/Scry.toc` or
+  `CHANGELOG.md` by hand: release-please owns both.
 - CI (`check.yml`) is `./dev check --ci`. It proves the offline loop only,
   so a merged PR can still be "in-game verification pending"; say so in the
   PR body when that is the case.

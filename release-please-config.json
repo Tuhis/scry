@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "aa70aad58accf91b5effa5dce326157377e82bed",
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "include-component-in-tag": false,
+      "extra-files": [{ "type": "generic", "path": "Scry/Scry.toc" }]
+    }
+  }
+}

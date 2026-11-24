@@ -1,0 +1,90 @@
+# Releases, fully automated by release-please (same setup as mumisija).
+#
+# Every push to main updates a release PR that bumps the version in
+# .release-please-manifest.json and Scry/Scry.toc (`## Version`, between the
+# x-release-please markers) and writes CHANGELOG.md, all derived from the
+# Conventional Commit titles merged since the last release: `fix:` -> patch,
+# `feat:` -> minor, `!` -> major. Merging that PR tags vX.Y.Z, creates the GitHub
+# Release, and the `package` job attaches Scry-X.Y.Z.zip: the Scry/ folder as
+# it ships, ready to unzip into Interface/AddOns.
+#
+# RUNNER POOL: as in check.yml, RUNNER_LABEL selects the self-hosted pool and
+# its absence falls back to hosted runners. Both provide gh and zip.
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      # The release PR is opened as the riliisseri GitHub App when it is set up
+      # for this repo, not as GITHUB_TOKEN: GitHub does not run pull_request
+      # workflows (check.yml) for a PR that GITHUB_TOKEN pushed. Needs
+      # vars.RELEASE_APP_CLIENT_ID and secrets.RELEASE_APP_PRIVATE_KEY (App
+      # permissions: Contents and Pull requests read/write); without the
+      # variable it falls back to GITHUB_TOKEN. The App's tags do trigger
+      # workflows, so packaging stays chained off this job's outputs: an
+      # `on: push: tags` workflow would publish a second time.
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        if: vars.RELEASE_APP_CLIENT_ID != ''
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  package:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      # The zip holds the Scry/ folder exactly as committed. BuildInfo.lua in
+      # the repo is the release one (dev = false); only ./dev deploy writes a dev
+      # build. The TOC version must be the released version, or the addon would
+      # report a stale ScryDB.meta.addonVersion.
+      - name: Build Scry-${{ needs.release-please.outputs.version }}.zip
+        env:
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          toc_version=$(sed -n 's/^## Version: *//p' Scry/Scry.toc | tr -d '\r')
+          if [ "$toc_version" != "$VERSION" ]; then
+            echo "::error::Scry/Scry.toc has ## Version $toc_version, release is $VERSION"
+            exit 1
+          fi
+          grep -q 'dev = false' Scry/BuildInfo.lua || { echo "::error::Scry/BuildInfo.lua is not the release build info"; exit 1; }
+          zip -r -X "Scry-$VERSION.zip" Scry
+          unzip -l "Scry-$VERSION.zip"
+
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: gh release upload "$TAG" "Scry-$VERSION.zip" --clobber
