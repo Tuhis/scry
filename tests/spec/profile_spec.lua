@@ -159,6 +159,32 @@ describe("module: professions", function()
 		assert.equals("optimal", char(wow).professions.known[171].difficulty[2332])
 	end)
 
+	local function selftest(wow)
+		for recipeID in pairs(wow.state.tradeskill.recipes) do
+			wow.state.spellNames[recipeID] = "Recipe " .. recipeID -- a recipe is a spell of the same name
+		end
+		wow:slash("/scry selftest")
+		wow:assertNoErrors()
+		local st = wow.env.ScryDevDB.selftest
+		assert.equals(0, st.failed, require("tests.util").dump(st.results))
+	end
+
+	it("passes its selftests with the scanned profession's window open", function()
+		local wow = login({ dev = true })
+		open(wow)
+		selftest(wow)
+	end)
+
+	it("passes its selftests in someone else's window of a scanned profession", function()
+		for _, kind in ipairs({ "linked", "guild", "npc" }) do
+			local wow = login({ dev = true })
+			open(wow)
+			wow.state.tradeskill[kind] = true
+			wow.state.tradeskill.recipes[2332] = true -- they know a recipe this character does not
+			selftest(wow)
+		end
+	end)
+
 	it("adds a newly learned recipe to a profession saved without difficulties", function()
 		local wow = login()
 		open(wow)

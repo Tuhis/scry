@@ -26,12 +26,17 @@ local function describe(recipeID, recipe)
 	ns.DB:RecipeAbility(recipeID, recipe.skillLineAbilityID)
 end
 
+-- Whether the character's own profession window is open and loaded: not someone
+-- else's profession (chat link, guild member) and not an NPC crafting window.
+local function ownWindowReady()
+	return C_TradeSkillUI.IsTradeSkillReady()
+		and not C_TradeSkillUI.IsTradeSkillLinked()
+		and not C_TradeSkillUI.IsTradeSkillGuild()
+		and not C_TradeSkillUI.IsNPCCrafting()
+end
+
 local function scan()
-	if not C_TradeSkillUI.IsTradeSkillReady() then
-		return
-	end
-	-- Someone else's profession (chat link, guild member) or an NPC crafting window.
-	if C_TradeSkillUI.IsTradeSkillLinked() or C_TradeSkillUI.IsTradeSkillGuild() or C_TradeSkillUI.IsNPCCrafting() then
+	if not ownWindowReady() then
 		return
 	end
 	local info = C_TradeSkillUI.GetBaseProfessionInfo()
@@ -135,8 +140,8 @@ end)
 -- ability ID. Check the client reports one for every recipe, that it leads back to
 -- the same recipe, and that the scan stored it.
 ns.SelfTest:Register("professions: recipes have a skill line ability ID (with a profession window open)", function()
-	if not C_TradeSkillUI.IsTradeSkillReady() then
-		return
+	if not ownWindowReady() then
+		return -- scan() stored nothing for this window
 	end
 	local stored = ns.DB.db.names.skillLineAbilities
 	local section = ns.DB:Peek("professions")
