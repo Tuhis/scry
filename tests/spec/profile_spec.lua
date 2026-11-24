@@ -175,6 +175,13 @@ describe("module: professions", function()
 		selftest(wow)
 	end)
 
+	it("passes its selftests when the client reports no difficulty for a recipe", function()
+		local wow = login({ dev = true })
+		wow.state.tradeskill.recipeDifficulty[2330] = nil
+		open(wow)
+		selftest(wow)
+	end)
+
 	it("passes its selftests in someone else's window of a scanned profession", function()
 		for _, kind in ipairs({ "linked", "guild", "npc" }) do
 			local wow = login({ dev = true })

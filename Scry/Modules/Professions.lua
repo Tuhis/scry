@@ -171,8 +171,9 @@ ns.SelfTest:Register("professions: recipes have a skill line ability ID (with a 
 					stored[recipeID] == abilityID,
 					("recipe %d: stored ability %s"):format(recipeID, tostring(stored[recipeID]))
 				)
+				-- The client may report no difficulty (the field is nilable); then none is stored.
 				assert(
-					entry.difficulty and entry.difficulty[recipeID],
+					not DIFFICULTY[recipe.relativeDifficulty] or (entry.difficulty and entry.difficulty[recipeID]),
 					("recipe %d has no difficulty"):format(recipeID)
 				)
 			end
