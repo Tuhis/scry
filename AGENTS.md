@@ -225,7 +225,9 @@ tools/docker/             pinned toolchain + API reference (Dockerfile, gen_api.
   Commit titles: `fix:` -> patch, `feat:` -> minor, `!` -> major; `ci:`,
   `docs:`, `test:`, `chore:`, `refactor:` make no release. Merging that PR
   tags `vX.Y.Z` and attaches `Scry-X.Y.Z.zip` (the `Scry/` folder) to the
-  GitHub Release. Never edit `## Version` in `Scry/Scry.toc` or
+  GitHub Release, whose notes start with the install instructions from
+  `.github/release-install.md` (keep it in step with the README's
+  "Installing" section). Never edit `## Version` in `Scry/Scry.toc` or
   `CHANGELOG.md` by hand: release-please owns both.
 - CI (`check.yml`) is `./dev check --ci`. It proves the offline loop only,
   so a merged PR can still be "in-game verification pending"; say so in the
