@@ -54,11 +54,14 @@ function DB:Init()
 	ScryDB = db
 	self.db = db
 
-	-- Names are in the client's language: start over when it changes.
+	-- Names are in the client's language: start over when it changes. The recipe ID
+	-- mapping is not text, and is only collected with a profession window open: keep it.
 	local locale = GetLocale()
 	if type(db.names) ~= "table" or db.names.locale ~= locale then
-		db.names = { locale = locale }
+		local abilities = type(db.names) == "table" and db.names.skillLineAbilities or nil
+		db.names = { locale = locale, skillLineAbilities = type(abilities) == "table" and abilities or nil }
 	end
+	db.names.skillLineAbilities = db.names.skillLineAbilities or {}
 	for _, kind in ipairs(NAME_KINDS) do
 		db.names[kind] = db.names[kind] or {}
 	end
@@ -103,6 +106,14 @@ end
 function DB:Name(kind, id, text)
 	if id and type(text) == "string" and text ~= "" then
 		self.db.names[kind][id] = text
+	end
+end
+
+--- Remember the skill line ability ID of a recipe (a spell ID). Battle.net's game
+--- data API keys its recipe documents by that ID. Static game data, shared like names.
+function DB:RecipeAbility(recipeID, skillLineAbilityID)
+	if recipeID and type(skillLineAbilityID) == "number" and skillLineAbilityID > 0 then
+		self.db.names.skillLineAbilities[recipeID] = skillLineAbilityID
 	end
 end
 

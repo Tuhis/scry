@@ -215,6 +215,7 @@ return function(wow, env)
 		},
 		BankType = { Character = 0, Guild = 1, Account = 2 },
 		SpellBookSpellBank = { Player = 0, Pet = 1 },
+		TradeskillRelativeDifficulty = { Optimal = 0, Medium = 1, Easy = 2, Trivial = 3 },
 		SpellBookItemType = { None = 0, Spell = 1, FutureSpell = 2, PetAction = 3, Flyout = 4 },
 	}
 	env.Constants = {
@@ -329,7 +330,22 @@ return function(wow, env)
 		end,
 	})
 	-- state.tradeskill: the profession window. ready = open and loaded;
-	-- recipes[recipeID] = learned (bool); recipeProfession[recipeID] = professionID.
+	-- recipes[recipeID] = learned (bool); recipeProfession[recipeID] = professionID;
+	-- recipeAbility[recipeID] = skillLineAbilityID; recipeDifficulty[recipeID] =
+	-- Enum.TradeskillRelativeDifficulty (nilable in the client).
+	local function recipeInfo(recipeID)
+		local t = state.tradeskill
+		local learned = t.recipes[recipeID]
+		if learned ~= nil then
+			return {
+				recipeID = recipeID,
+				learned = learned,
+				name = "Recipe " .. recipeID,
+				skillLineAbilityID = t.recipeAbility[recipeID],
+				relativeDifficulty = t.recipeDifficulty[recipeID],
+			}
+		end
+	end
 	local function sortedKeys(t)
 		local keys = {}
 		for k in pairs(t) do
@@ -364,9 +380,13 @@ return function(wow, env)
 			return state.tradeskill.ready and sortedKeys(state.tradeskill.recipes) or {}
 		end,
 		GetRecipeInfo = function(recipeID)
-			local learned = state.tradeskill.recipes[recipeID]
-			if learned ~= nil then
-				return { recipeID = recipeID, learned = learned, name = "Recipe " .. recipeID }
+			return recipeInfo(recipeID)
+		end,
+		GetRecipeInfoForSkillLineAbility = function(skillLineAbilityID)
+			for recipeID, abilityID in pairs(state.tradeskill.recipeAbility) do
+				if abilityID == skillLineAbilityID then
+					return recipeInfo(recipeID)
+				end
 			end
 		end,
 		GetProfessionInfoByRecipeID = function(recipeID)

@@ -110,6 +110,10 @@ ScryDB = {
 			["professions"] = {
 				["known"] = {
 					[171] = {
+						["difficulty"] = {
+							[2329] = "trivial",
+							[2330] = "easy",
+						},
 						["recipes"] = {
 							2329, -- [1]
 							2330, -- [2]
@@ -351,6 +355,10 @@ ScryDB = {
 		["quests"] = {
 			[7] = "Kobold Camp Cleanup",
 			[783] = "A Threat Within",
+		},
+		["skillLineAbilities"] = {
+			[2329] = 15200,
+			[2330] = 15201,
 		},
 		["skills"] = {
 			[43] = "Swords",

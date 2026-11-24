@@ -107,6 +107,8 @@ local function default_state()
 			name = "Alchemy",
 			recipes = { [2330] = true, [2332] = false, [2329] = true },
 			recipeProfession = { [2330] = 171, [2332] = 171, [2329] = 171 },
+			recipeAbility = { [2330] = 15201, [2332] = 15203, [2329] = 15200 },
+			recipeDifficulty = { [2330] = 2, [2332] = 0, [2329] = 3 },
 		},
 		spellbook = {
 			lines = {

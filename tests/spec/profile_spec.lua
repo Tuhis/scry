@@ -134,7 +134,71 @@ describe("module: professions", function()
 	it("records the learned recipes of the open profession, sorted", function()
 		local wow = login()
 		open(wow)
-		assert.same({ [171] = { recipes = { 2329, 2330 }, scannedAt = 1700000000 } }, char(wow).professions.known)
+		assert.same({
+			[171] = {
+				recipes = { 2329, 2330 },
+				difficulty = { [2329] = "trivial", [2330] = "easy" },
+				scannedAt = 1700000000,
+			},
+		}, char(wow).professions.known)
+	end)
+
+	it("leaves out the difficulty of a recipe the client reports none for", function()
+		local wow = login()
+		wow.state.tradeskill.recipeDifficulty[2330] = nil
+		open(wow)
+		assert.same({ [2329] = "trivial" }, char(wow).professions.known[171].difficulty)
+	end)
+
+	it("maps learned recipes to their skill line ability IDs", function()
+		local wow = login()
+		open(wow)
+		assert.same({ [2329] = 15200, [2330] = 15201 }, wow.env.ScryDB.names.skillLineAbilities)
+		wow:fire("NEW_RECIPE_LEARNED", 2332)
+		assert.equals(15203, wow.env.ScryDB.names.skillLineAbilities[2332])
+		assert.equals("optimal", char(wow).professions.known[171].difficulty[2332])
+	end)
+
+	local function selftest(wow)
+		for recipeID in pairs(wow.state.tradeskill.recipes) do
+			wow.state.spellNames[recipeID] = "Recipe " .. recipeID -- a recipe is a spell of the same name
+		end
+		wow:slash("/scry selftest")
+		wow:assertNoErrors()
+		local st = wow.env.ScryDevDB.selftest
+		assert.equals(0, st.failed, require("tests.util").dump(st.results))
+	end
+
+	it("passes its selftests with the scanned profession's window open", function()
+		local wow = login({ dev = true })
+		open(wow)
+		selftest(wow)
+	end)
+
+	it("passes its selftests when the client reports no difficulty for a recipe", function()
+		local wow = login({ dev = true })
+		wow.state.tradeskill.recipeDifficulty[2330] = nil
+		open(wow)
+		selftest(wow)
+	end)
+
+	it("passes its selftests in someone else's window of a scanned profession", function()
+		for _, kind in ipairs({ "linked", "guild", "npc" }) do
+			local wow = login({ dev = true })
+			open(wow)
+			wow.state.tradeskill[kind] = true
+			wow.state.tradeskill.recipes[2332] = true -- they know a recipe this character does not
+			selftest(wow)
+		end
+	end)
+
+	it("adds a newly learned recipe to a profession saved without difficulties", function()
+		local wow = login()
+		open(wow)
+		char(wow).professions.known[171].difficulty = nil -- as saved by an older version
+		wow:fire("NEW_RECIPE_LEARNED", 2332)
+		wow:assertNoErrors()
+		assert.same({ [2332] = "optimal" }, char(wow).professions.known[171].difficulty)
 	end)
 
 	it("ignores linked, guild and NPC crafting windows", function()

@@ -60,7 +60,8 @@ Schema describes that JSON form.
     "traitNodes": { "7001": "Improved Fireball" },
     "maps": { "1453": "Stormwind City" },
     "specs": { "63": "Fire" },
-    "quests": { "7": "Kobold Camp Cleanup" }
+    "quests": { "7": "Kobold Camp Cleanup" },
+    "skillLineAbilities": { "2330": 15201 }   // recipe spell ID -> Battle.net recipe ID, see "Recipe IDs"
   },
   "characters": {
     "Player-1234-0ABCDEF1": {  // the character's GUID (WoW: Forever has no realms)
@@ -96,6 +97,7 @@ Schema describes that JSON form.
         "known": {
           "171": {             // profession (skill line) ID
             "recipes": [2329, 2330],   // known recipe spell IDs, ascending
+            "difficulty": { "2329": "trivial", "2330": "easy" },  // optimal | medium | easy | trivial
             "scannedAt": 1700003600    // when this profession's window was read
           }
         },
@@ -143,7 +145,7 @@ Schema describes that JSON form.
 | `bags` | login, whenever bag contents change | `vendorValue` counts items whose price the client has not loaded yet as 0; it corrects itself within the session. The game has no market prices: price `items` yourself for auction value. |
 | `bank` | **only while the bank window is open** | Character bank tabs. Absent until the first bank visit with the addon. |
 | `skills` | login, skill change | Skill levels of professions are here; skill lines under a collapsed header in the game's skill window may be missing. |
-| `professions` | **only when that profession's window is opened**, plus each newly learned recipe | A profession is absent until its window was opened once. Check `scannedAt`. |
+| `professions` | **only when that profession's window is opened**, plus each newly learned recipe | A profession is absent until its window was opened once. Check `scannedAt`. `difficulty` is each recipe's colour for the character's skill at `scannedAt` (optimal = orange, medium = yellow, easy = green, trivial = grey); it goes stale as the skill rises until the window is opened again, and is absent for professions last read by an addon version without it. |
 | `spells` | login, spellbook change | Known spells only. `rank` is absent for spells without ranks. `pet` keeps the last seen pet's spells. |
 | `legacy` | login, tree or point change; `challenges` a few seconds after login and on completion | `points.unspent`/`spent` are absent if the client did not report the point currency. Only nodes with a rank and completed challenges are listed. |
 | `equipment` | login, equipment change | Slot IDs: 1 head, 2 neck, 3 shoulder, 4 shirt, 5 chest, 6 waist, 7 legs, 8 feet, 9 wrist, 10 hands, 11-12 rings, 13-14 trinkets, 15 back, 16 main hand, 17 off hand, 18 ranged, 19 tabard. |
@@ -184,6 +186,22 @@ into text, one map per kind of ID:
 - All ranks of a spell share one name; the rank is in `spells`.
 - Equipment names are the base item's name; the full name with a random suffix
   ("... of the Hierophant") is inside `equipment.slots[].link`.
+
+### Recipe IDs
+
+A recipe has two IDs. The game, and so `professions.known[].recipes` and
+`names.spells`, uses the recipe's **spell ID**. Battle.net's game data API uses
+the **skill line ability ID** and does not carry the spell ID: Runed Copper Rod
+is spell `7421` in the game and `/data/wow/recipe/4291` in the API.
+`names.skillLineAbilities` maps the first to the second, for every recipe the
+addon has exported.
+
+- It is static game data, the same for every character and language. Unlike the
+  name maps it is kept when `names.locale` changes.
+- It is filled while a profession window is open. Recipes saved by an addon
+  version without it are missing until that profession's window is opened again.
+
+### General
 
 - Characters are keyed by GUID, which is unique and never changes. WoW: Forever
   has rulesets (Normal, PvP, ...) instead of realms; the ruleset is not exported
