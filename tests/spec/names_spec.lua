@@ -63,6 +63,28 @@ describe("names", function()
 		assert.equals("Recipe 2332", names.spells[2332])
 	end)
 
+	it("names recipes saved without names at login, from the spell data", function()
+		local wow = login()
+		wow.state.tradeskill.ready = true
+		wow:fire("TRADE_SKILL_LIST_UPDATE")
+		wow:advance(1)
+		wow.state.tradeskill.ready = false
+		-- As saved by a build before ScryDB.names: the recipe list without names.
+		local names = wow.env.ScryDB.names
+		names.spells = {}
+		wow.state.spellNames[2330] = "Minor Healing Potion"
+		wow:reload()
+		wow:assertNoErrors()
+		names = wow.env.ScryDB.names
+		assert.equals("Minor Healing Potion", names.spells[2330])
+		-- A name the client already gave is kept; an unknown spell stays unnamed.
+		names.spells[2330] = "Recipe 2330"
+		wow.state.spellNames[2330] = nil
+		wow:reload()
+		wow:assertNoErrors()
+		assert.equals("Recipe 2330", wow.env.ScryDB.names.spells[2330])
+	end)
+
 	it("adds item names once the client has loaded the item", function()
 		local wow = login({ items = { [10504] = { cached = false } } })
 		local names = wow.env.ScryDB.names

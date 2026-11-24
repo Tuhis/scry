@@ -3,7 +3,7 @@
 -- is a snapshot taken when the player last opened it. Skill levels are in "skills".
 local _, ns = ...
 
-ns:NewModule("professions")
+local Professions = ns:NewModule("professions")
 
 local function known()
 	local section = ns.DB:Section("professions")
@@ -41,6 +41,21 @@ local function scan()
 	ns.Log:Debug(("professions: %s scanned, %d of %d recipes known"):format(professionID, #recipes, #all))
 end
 
+-- Recipe lists saved before ScryDB.names existed (or while a name was not loaded)
+-- have no names, and are only rescanned when their window is opened again. A
+-- recipe ID is a spell ID, so name the stored recipes from the spell data.
+function Professions:OnLogin()
+	local section = ns.DB:Peek("professions")
+	local names = ns.DB.db.names.spells
+	for _, entry in pairs(section and section.known or {}) do
+		for _, recipeID in ipairs(entry.recipes) do
+			if not names[recipeID] then
+				ns.DB:Name("spells", recipeID, C_Spell.GetSpellName(recipeID))
+			end
+		end
+	end
+end
+
 ns:On("TRADE_SKILL_LIST_UPDATE", function()
 	ns:Debounce("professions.scan", 0.5, scan)
 end)
@@ -72,5 +87,26 @@ ns.SelfTest:Register("professions: scanned professions have recipes (after openi
 	end
 	for professionID, entry in pairs(s.known) do
 		assert(#entry.recipes > 0, "profession " .. professionID .. " scanned with 0 known recipes")
+	end
+end)
+
+-- OnLogin names stored recipes by C_Spell.GetSpellName. That relies on a recipe ID
+-- being the ID of a spell with the recipe's name; check it against the recipe API
+-- while a profession window is open.
+ns.SelfTest:Register("professions: recipe names match their spell names (with a profession window open)", function()
+	if not C_TradeSkillUI.IsTradeSkillReady() then
+		return
+	end
+	local checked = 0
+	for _, recipeID in ipairs(C_TradeSkillUI.GetAllRecipeIDs() or {}) do
+		local recipe = C_TradeSkillUI.GetRecipeInfo(recipeID)
+		if recipe and recipe.name and checked < 50 then
+			checked = checked + 1
+			local spellName = C_Spell.GetSpellName(recipeID)
+			assert(
+				spellName == recipe.name,
+				("recipe %d is %q, spell %d is %q"):format(recipeID, recipe.name, recipeID, tostring(spellName))
+			)
+		end
 	end
 end)
