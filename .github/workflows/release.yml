@@ -6,7 +6,9 @@
 # Conventional Commit titles merged since the last release: `fix:` -> patch,
 # `feat:` -> minor, `!` -> major. Merging that PR tags vX.Y.Z, creates the GitHub
 # Release, and the `package` job attaches Scry-X.Y.Z.zip: the Scry/ folder as
-# it ships, ready to unzip into Interface/AddOns.
+# it ships, ready to unzip into Interface/AddOns, and puts the install
+# instructions from .github/release-install.md above the changelog in the
+# release notes.
 #
 # RUNNER POOL: as in check.yml, RUNNER_LABEL selects the self-hosted pool and
 # its absence falls back to hosted runners. Both provide gh and zip.
@@ -88,3 +90,20 @@ jobs:
           TAG: ${{ needs.release-please.outputs.tag_name }}
           VERSION: ${{ needs.release-please.outputs.version }}
         run: gh release upload "$TAG" "Scry-$VERSION.zip" --clobber
+
+      # Install instructions first, then release-please's changelog. Rerunning
+      # the job does not duplicate them: it skips notes that already have them.
+      - name: Add install instructions to the release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          gh release view "$TAG" --json body --jq .body > changelog.md
+          if grep -q '^## Install$' changelog.md; then
+            echo "Release notes already have install instructions"
+            exit 0
+          fi
+          { sed "s/{{VERSION}}/$VERSION/g" .github/release-install.md; echo; cat changelog.md; } > notes.md
+          cat notes.md
+          gh release edit "$TAG" --notes-file notes.md
