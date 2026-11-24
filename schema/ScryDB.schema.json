@@ -48,7 +48,7 @@
       "description": "Display names for the IDs used elsewhere in this file, in the game client's language. Shared by all characters; a name is added when the addon first sees the ID and the client knows its name, so an ID can be missing here.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["locale", "items", "spells", "skills", "factions", "currencies", "achievements", "traitNodes", "maps", "specs", "quests"],
+      "required": ["locale", "items", "spells", "skills", "factions", "currencies", "achievements", "traitNodes", "maps", "specs", "quests", "skillLineAbilities"],
       "properties": {
         "locale": { "description": "Client language of the names, e.g. \"enUS\". All names are dropped and collected again when it changes.", "type": "string" },
         "items": { "description": "Item ID -> item name (bags, bank, equipment).", "$ref": "#/$defs/nameMap" },
@@ -60,7 +60,13 @@
         "traitNodes": { "description": "Trait node ID -> name (talents and Legacy trees).", "$ref": "#/$defs/nameMap" },
         "maps": { "description": "UI map ID -> zone name (character.zone).", "$ref": "#/$defs/nameMap" },
         "specs": { "description": "Specialization ID -> name (talents.specID).", "$ref": "#/$defs/nameMap" },
-        "quests": { "description": "Quest ID -> title (quests.completed).", "$ref": "#/$defs/nameMap" }
+        "quests": { "description": "Quest ID -> title (quests.completed).", "$ref": "#/$defs/nameMap" },
+        "skillLineAbilities": {
+          "description": "Recipe spell ID (professions.known[].recipes) -> skill line ability ID, the ID Battle.net's game data API uses for the recipe (/data/wow/recipe/{id}). Not text: static game data, kept when the locale changes. Filled while a profession window is open, so an ID can be missing.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/idKeys" },
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        }
       }
     },
     "characterEntry": {
@@ -188,6 +194,12 @@
             "required": ["recipes", "scannedAt"],
             "properties": {
               "recipes": { "description": "Recipe spell IDs the character knows, ascending.", "type": "array", "items": { "type": "integer" } },
+              "difficulty": {
+                "description": "Recipe spell ID -> how hard the recipe was for this character's skill when the window was read, i.e. its colour in the profession window: optimal (orange), medium (yellow), easy (green), trivial (grey). Absent in data saved before this field existed; a recipe is missing when the client reported no difficulty.",
+                "type": "object",
+                "propertyNames": { "$ref": "#/$defs/idKeys" },
+                "additionalProperties": { "enum": ["optimal", "medium", "easy", "trivial"] }
+              },
               "scannedAt": { "description": "When this profession's window was last read.", "$ref": "#/$defs/timestamp" }
             }
           }

@@ -55,6 +55,11 @@ whenever a real game session teaches you something; cite the evidence.
 - **Profession recipes** are readable only for the open profession window:
   `C_TradeSkillUI.GetAllRecipeIDs()` works there (returned 471 for Tailoring).
   `C_SkillInfo` lists each profession twice (e.g. 185 and 2939, same rank).
+- **Recipe IDs** (seen in game, 2026-11-24, Enchanting). `GetRecipeInfo(spellID)`
+  has `skillLineAbilityID`, the ID Battle.net's static-forever API keys recipes
+  by: Runed Copper Rod is spell 7421, ability 4291, `/data/wow/recipe/4291`.
+  `relativeDifficulty` (`Enum.TradeskillRelativeDifficulty`) and `categoryID`
+  are there too. The table has no skill thresholds besides `maxTrivialLevel`.
 - **Legacy system.** Legacy Challenges are achievements (`GetAchievementInfo`
   reports the year as years since 2000); the three Legacy trees are trait
   trees readable at login without opening the Legacy window; IDs are in
