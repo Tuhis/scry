@@ -3,7 +3,7 @@
 # clicks around, and reports Lua errors. Heavy (several minutes to build, >1 GB),
 # so it is a separate image that is only built the first time `./dev sim` runs.
 # The WoW client data it simulates is downloaded at image build time.
-FROM python:3.13-bookworm
+FROM python:3.15-bookworm
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
