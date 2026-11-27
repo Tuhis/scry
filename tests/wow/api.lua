@@ -100,6 +100,88 @@ return function(wow, env)
 	env.Screenshot = function()
 		wow.screenshots = wow.screenshots + 1
 	end
+	env.InCombatLockdown = function()
+		return state.inCombat
+	end
+
+	-- Combat log. state.combatLog = { enabled, advanced }. LoggingCombat() with no
+	-- argument returns the current state (Blizzard's /combatlog uses it that way).
+	env.LoggingCombat = function(newState)
+		if newState ~= nil then
+			state.combatLog.enabled = newState and true or false
+		end
+		return state.combatLog.enabled
+	end
+	env.C_ChatInfo = wow:namespace("C_ChatInfo", {
+		IsLoggingCombat = function()
+			return state.combatLog.enabled, state.combatLog.advanced
+		end,
+	})
+
+	-- Blizzard's settings panel (Blizzard_Settings_Shared, plain Lua in the client).
+	-- Only what the addon uses. Registrations land in wow.settingsUI, which belongs to
+	-- one UI session like everything else in env:
+	--   categories = { { name, id, settings = { [variable] = setting }, elements = {...} } }
+	--   opened = list of category IDs passed to Settings.OpenToCategory
+	-- A test "clicks" a checkbox with setting:SetValue(value), as the panel does.
+	local ui = { categories = {}, opened = {}, registered = {} }
+	wow.settingsUI = ui
+	local nextCategoryID = 1000
+	local function element(kind, data)
+		return { kind = kind, data = data }
+	end
+	env.CreateSettingsListSectionHeaderInitializer = function(name, tooltip)
+		return element("header", { name = name, tooltip = tooltip })
+	end
+	env.CreateSettingsButtonInitializer = function(name, buttonText, buttonClick, tooltip, addSearchTags)
+		assert(addSearchTags ~= nil) -- the real one asserts this too
+		return element("button", { name = name, buttonText = buttonText, buttonClick = buttonClick, tooltip = tooltip })
+	end
+	env.Settings = wow:namespace("Settings", {
+		VarType = { Boolean = "boolean", String = "string", Number = "number" },
+		Default = { True = true, False = false },
+		RegisterVerticalLayoutCategory = function(name)
+			nextCategoryID = nextCategoryID + 1
+			local category = { name = name, id = nextCategoryID, settings = {}, elements = {} }
+			function category:GetID()
+				return self.id
+			end
+			local layout = {}
+			function layout:AddInitializer(initializer)
+				table.insert(category.elements, initializer)
+			end
+			ui.categories[#ui.categories + 1] = category
+			return category, layout
+		end,
+		RegisterProxySetting = function(category, variable, variableType, name, defaultValue, getValue, setValue)
+			assert(not category.settings[variable], "duplicate setting variable " .. variable)
+			assert(type(defaultValue) == variableType, "default value does not match the setting's type")
+			local setting = { variable = variable, name = name, defaultValue = defaultValue }
+			function setting:GetValue()
+				return getValue()
+			end
+			function setting:SetValue(value)
+				setValue(value)
+			end
+			category.settings[variable] = setting
+			return setting
+		end,
+		CreateCheckbox = function(category, setting, tooltip)
+			local e = element("checkbox", { setting = setting, tooltip = tooltip })
+			table.insert(category.elements, e)
+			return e
+		end,
+		RegisterAddOnCategory = function(category)
+			ui.registered[category.id] = category
+		end,
+		OpenToCategory = function(categoryID)
+			assert(
+				ui.registered[categoryID],
+				"OpenToCategory: category " .. tostring(categoryID) .. " is not registered"
+			)
+			ui.opened[#ui.opened + 1] = categoryID
+		end,
+	})
 	env.SlashCmdList = {}
 	env.CreateFrame = function(frameType, name)
 		return wow:_createFrame(frameType, name)

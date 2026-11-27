@@ -34,13 +34,21 @@ commands.shot = function()
 	Screenshot()
 end
 
+commands.settings = function()
+	ns.Config:Open()
+end
+commands.options, commands.config = commands.settings, commands.settings
+
 local function help()
-	print("Scry commands: /scry status | selftest | dev on|off | rl | shot")
+	print("Scry: /scry opens the settings. Other commands: /scry status | selftest | dev on|off | rl | shot | help")
 end
 
 SLASH_SCRY1 = "/scry"
 SlashCmdList.SCRY = function(input)
 	local name, arg = strtrim(input or ""):match("^(%S*)%s*(.-)$")
+	if name == "" then
+		name = "settings"
+	end
 	local command = commands[name:lower()]
 	if command then
 		ns.safecall(command, arg)

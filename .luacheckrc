@@ -14,6 +14,6 @@ files["Scry"] = {
 	std = "lua51+wow",
 	-- Globals the addon itself defines. Keep this list minimal: SavedVariables
 	-- declared in Scry.toc and slash command registrations.
-	globals = { "ScryDB", "ScryDevDB", "SLASH_SCRY1", "SlashCmdList" },
+	globals = { "ScryDB", "ScryDevDB", "ScrySettings", "SLASH_SCRY1", "SlashCmdList" },
 }
 files["tests"] = { std = "lua51+busted" }

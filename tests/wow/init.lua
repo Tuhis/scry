@@ -67,6 +67,8 @@ local function default_state()
 			hardcore = false,
 			experiencePreset = 1, -- Enum.ForeverExperiencePreset
 		},
+		inCombat = false, -- InCombatLockdown
+		combatLog = { enabled = false, advanced = false }, -- LoggingCombat / C_ChatInfo.IsLoggingCombat
 		money = 1234567, -- copper
 		items = { -- item database: sellPrice in copper; cached = false until requested
 			[6948] = { name = "Hearthstone", sellPrice = 0 },

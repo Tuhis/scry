@@ -230,8 +230,9 @@ for _, path in ipairs(lines_of("find ui-source/Interface/AddOns -name '*.lua' -n
 			end
 			global(g)
 		else
-			local av = line:match("^([%a_][%w_]*)%s*=[^=]")
-			if av then
+			-- "Name = value" or "Name =" with the value on the next line (Settings =), not "Name == x".
+			local av = line:match("^([%a_][%w_]*)%s*=")
+			if av and not line:match("^[%a_][%w_]*%s*==") then
 				global(av)
 			end
 		end

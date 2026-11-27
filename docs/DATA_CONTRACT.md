@@ -13,11 +13,13 @@ by `./dev check`, so they cannot drift from what the addon writes.
 ```
 
 One file per WoW account, covering all characters on it. It is a Lua source file
-containing two assignments:
+containing these assignments:
 
 - `ScryDB`: **the contract**, described here.
 - `ScryDevDB`: debugging data for the development tooling. Not part of the
   contract; may change at any time. Ignore it.
+- `ScrySettings`: the player's addon settings (`/scry`). Not part of the
+  contract; ignore it.
 
 ## When it changes
 

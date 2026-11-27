@@ -152,7 +152,9 @@ Scry/                     the addon; exactly what ships and what gets deployed
   Core/Log.lua            ns.Log -> ScryDevDB (dev log, errors; not part of the contract)
   Core/DB.lua             ns.DB -> ScryDB (the contract), schema version, migrations
   Core/SelfTest.lua       in-game selftests
-  Core/Slash.lua          /scry status | selftest | dev on|off | rl | shot
+  Core/Slash.lua          /scry (settings page) | status | selftest | dev on|off | rl | shot | help
+  Core/Config.lua         ns.Config -> ScrySettings (user settings, not the contract), Options > AddOns page
+  Core/CombatLog.lua      turns on the combat log at login (setting combatLogAtLogin)
   Core/DB.lua also holds ScryDB.names (ID -> display name): call ns.DB:Name(kind, id, text) for every exported ID
   Core/Items.lua          ns.Items: container scan -> itemID counts + vendor value (bags, bank)
   Core/Traits.lua         ns.TraitNodes: trait tree reader (talents, Legacy trees)

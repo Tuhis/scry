@@ -84,6 +84,7 @@ ns:On("ADDON_LOADED", function(loadedName)
 	end
 	ns.Log:Init()
 	ns.DB:Init()
+	ns.Config:Init()
 end)
 
 ns:On("PLAYER_LOGIN", function()
