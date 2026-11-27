@@ -64,6 +64,10 @@ whenever a real game session teaches you something; cite the evidence.
   reports the year as years since 2000); the three Legacy trees are trait
   trees readable at login without opening the Legacy window; IDs are in
   `Constants.LegacyConsts`. Blizzard's code: `Blizzard_LegacySystem`.
+- **Combat logging survives `/reload`** (seen in game, 2026-11-27). After
+  `LoggingCombat(true)` at login, `C_ChatInfo.IsLoggingCombat()` was still
+  true at `PLAYER_LOGIN` after a `/reload` (Scry logged "combat log already
+  on"). A full client restart starts with it off.
 
 ## Working with the human
 
