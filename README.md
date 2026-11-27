@@ -23,6 +23,16 @@ its work, and you press `/reload` in game when it asks.
 Your recorded data lives in `WTF\Account\<account>\SavedVariables\Scry.lua`
 and survives updates; newer versions migrate it automatically.
 
+## Using it (players)
+
+Scry records in the background; there is nothing to do. Type `/scry` to open
+its settings page (also under Options > AddOns > Scry):
+
+- **Turn on combat logging at login** (on by default): starts the game's combat
+  log, as `/combatlog` does, every time you log in, for log analysis tools.
+
+`/scry help` lists the other commands.
+
 ## Requirements
 
 - Python 3.9+ and Docker. That is all for the offline loop; every other tool

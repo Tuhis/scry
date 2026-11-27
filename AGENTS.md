@@ -64,6 +64,10 @@ whenever a real game session teaches you something; cite the evidence.
   reports the year as years since 2000); the three Legacy trees are trait
   trees readable at login without opening the Legacy window; IDs are in
   `Constants.LegacyConsts`. Blizzard's code: `Blizzard_LegacySystem`.
+- **Combat logging survives `/reload`** (seen in game, 2026-11-27). After
+  `LoggingCombat(true)` at login, `C_ChatInfo.IsLoggingCombat()` was still
+  true at `PLAYER_LOGIN` after a `/reload` (Scry logged "combat log already
+  on"). A full client restart starts with it off.
 
 ## Working with the human
 
@@ -152,7 +156,9 @@ Scry/                     the addon; exactly what ships and what gets deployed
   Core/Log.lua            ns.Log -> ScryDevDB (dev log, errors; not part of the contract)
   Core/DB.lua             ns.DB -> ScryDB (the contract), schema version, migrations
   Core/SelfTest.lua       in-game selftests
-  Core/Slash.lua          /scry status | selftest | dev on|off | rl | shot
+  Core/Slash.lua          /scry (settings page) | status | selftest | dev on|off | rl | shot | help
+  Core/Config.lua         ns.Config -> ScrySettings (user settings, not the contract), Options > AddOns page
+  Core/CombatLog.lua      turns on the combat log at login (setting combatLogAtLogin)
   Core/DB.lua also holds ScryDB.names (ID -> display name): call ns.DB:Name(kind, id, text) for every exported ID
   Core/Items.lua          ns.Items: container scan -> itemID counts + vendor value (bags, bank)
   Core/Traits.lua         ns.TraitNodes: trait tree reader (talents, Legacy trees)
